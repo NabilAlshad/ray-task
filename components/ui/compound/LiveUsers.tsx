@@ -122,10 +122,10 @@ export function LiveUsers() {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          {activeUsers.map((user) => (
+          {activeUsers.filter((user) => user.id !== currentUser?.id).map((user) => (
             <div
               key={user.id}
-              title={`${user.name} • ${USER_ROLE_LABELS[user.role]}${user.id === currentUser?.id ? " (You)" : ""}`}
+              title={`${user.name} • ${USER_ROLE_LABELS[user.role]}`}
               className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1.5"
             >
               <div
@@ -136,7 +136,6 @@ export function LiveUsers() {
               <div className="hidden sm:block">
                 <div className="text-sm font-semibold leading-none text-gray-800">
                   {user.name}
-                  {user.id === currentUser?.id ? " (You)" : ""}
                 </div>
                 <div className="mt-1">
                   <span
@@ -153,19 +152,30 @@ export function LiveUsers() {
           ) : null}
         </div>
 
-        <div className="hidden text-xs sm:flex sm:flex-col sm:items-end">
-          <div className="text-gray-500">
-            Logged in as{" "}
-            <span className="font-semibold text-gray-700">
+        <div className="hidden sm:flex items-center gap-4 lg:ml-4 lg:pl-6 lg:border-l lg:border-gray-200">
+          <div className="flex flex-col items-end text-xs">
+            <span className="font-semibold text-gray-800 text-sm">
               {currentUser?.name ?? "Connecting..."}
             </span>
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${ROLE_STYLES[currentUser?.role ?? "VIEWER"]}`}>
+                {roleLabel}
+              </span>
+              <span className="text-gray-400 font-medium ml-1">
+                {accessSummary}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-2 py-0.5 font-semibold ${ROLE_STYLES[currentUser?.role ?? "VIEWER"]}`}>
-              {roleLabel}
-            </span>
-            <span className="text-gray-400">{accessSummary}</span>
-          </div>
+          {currentUser ? (
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold uppercase text-white shadow-sm ring-2 ring-white ${currentUser.color}`}
+              title="Your Profile"
+            >
+              {currentUser.name.charAt(0)}
+            </div>
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
+          )}
         </div>
       </div>
     </div>
