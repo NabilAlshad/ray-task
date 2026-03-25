@@ -32,13 +32,13 @@
     "title": "Set up CI/CD pipeline",
     "description": "Automate testing and deployment",
     "status": "DONE",
-    "order": 1
+    "order": 2
   },
   {
     "id": "5",
     "title": "Deploy to production",
     "description": "Set up hosting and domains",
-    "status": "DONE",
-    "order": 2
+    "status": "IN_PROGRESS",
+    "order": 0
   }
 ]

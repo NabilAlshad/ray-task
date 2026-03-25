@@ -142,10 +142,10 @@ export function useTaskDragLogic({ tasks, addOptimisticTask }: UseTaskDragLogicO
             order: newIndex,
           };
 
-          addOptimisticTask({ type: "move", payload: movedTask });
           startTransition(() => {
+            addOptimisticTask({ type: "move", payload: movedTask });
             moveTask(movedTask.id, movedTask.status, movedTask.order);
-            socket.emit('taskMoved', movedTask);
+            socket.emit("taskMoved", movedTask);
           });
           resetPreview();
           return;
@@ -161,10 +161,10 @@ export function useTaskDragLogic({ tasks, addOptimisticTask }: UseTaskDragLogicO
         order: finalTask.order,
       };
 
-      addOptimisticTask({ type: "move", payload: movedTask });
       startTransition(() => {
+        addOptimisticTask({ type: "move", payload: movedTask });
         moveTask(movedTask.id, movedTask.status, movedTask.order);
-        socket.emit('taskMoved', movedTask);
+        socket.emit("taskMoved", movedTask);
       });
     }
 

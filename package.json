@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node --watch server.js",
+    "dev": "node --watch server/server.js",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
+    "start": "NODE_ENV=production node server/server.js",
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch"

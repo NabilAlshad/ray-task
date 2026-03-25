@@ -89,10 +89,10 @@ export function useTaskModalLogic({ tasks, addOptimisticTask }: UseTaskModalLogi
         return;
       }
       const updated = { ...taskToEdit, ...data };
-      addOptimisticTask({ type: "update", task: updated });
       startTransition(() => {
+        addOptimisticTask({ type: "update", task: updated });
         updateTask(updated.id, updated);
-        socket.emit('taskUpdated', updated);
+        socket.emit("taskUpdated", updated);
       });
       addNotification({
         title: "Task updated",
@@ -113,12 +113,12 @@ export function useTaskModalLogic({ tasks, addOptimisticTask }: UseTaskModalLogi
         title: data.title,
         description: data.description,
         status: data.status,
-        order: tasks.filter(t => t.status === data.status).length,
+        order: tasks.filter((task) => task.status === data.status).length,
       };
-      addOptimisticTask({ type: "add", task: newTask });
       startTransition(() => {
+        addOptimisticTask({ type: "add", task: newTask });
         addTask(newTask);
-        socket.emit('taskAdded', newTask);
+        socket.emit("taskAdded", newTask);
       });
       addNotification({
         title: "Task created",
@@ -156,10 +156,10 @@ export function useTaskModalLogic({ tasks, addOptimisticTask }: UseTaskModalLogi
       return;
     }
 
-    addOptimisticTask({ type: "delete", id: taskToDelete.id });
     startTransition(() => {
+      addOptimisticTask({ type: "delete", id: taskToDelete.id });
       deleteTask(taskToDelete.id);
-      socket.emit('taskDeleted', taskToDelete.id);
+      socket.emit("taskDeleted", taskToDelete.id);
     });
     addNotification({
       title: "Task deleted",
