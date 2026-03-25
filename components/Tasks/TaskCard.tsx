@@ -8,6 +8,7 @@ import { memo } from "react";
 
 export const TaskCard = memo(function TaskCard({
   task,
+  onView,
   onEdit,
   onDelete,
   canEdit,
@@ -50,9 +51,28 @@ export const TaskCard = memo(function TaskCard({
       {...listeners}
     >
       <div className="flex justify-between items-start gap-2">
-        <h4 className="font-semibold text-gray-800 line-clamp-2">
-          {task.title}
-        </h4>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onView(task)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onView(task);
+            }
+          }}
+          className="min-w-0 flex-1 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          aria-label={`View task ${task.title}`}
+        >
+          <h4 className="font-semibold text-gray-800 line-clamp-2">
+            {task.title}
+          </h4>
+
+          {task.description && (
+            <p className="mt-2 text-sm text-gray-500 line-clamp-3">{task.description}</p>
+          )}
+        </div>
+
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {canEdit ? (
             <button
@@ -84,10 +104,6 @@ export const TaskCard = memo(function TaskCard({
           ) : null}
         </div>
       </div>
-
-      {task.description && (
-        <p className="text-sm text-gray-500 line-clamp-3">{task.description}</p>
-      )}
     </div>
   );
 });

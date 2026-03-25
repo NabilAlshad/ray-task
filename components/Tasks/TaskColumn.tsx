@@ -28,6 +28,7 @@ export const TaskColumn = memo(function TaskColumn({
   status,
   tasks,
   title,
+  onViewTask,
   onEditTask,
   onDeleteTask,
   canEditTask,
@@ -70,6 +71,7 @@ export const TaskColumn = memo(function TaskColumn({
             <TaskCard 
               key={task.id} 
               task={task} 
+              onView={onViewTask}
               onEdit={onEditTask} 
               onDelete={onDeleteTask}
               canEdit={canEditTask}

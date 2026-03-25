@@ -13,7 +13,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100vh-2rem)]">
         <button
           type="button"
           onClick={onClose}
@@ -27,8 +27,10 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         <h2 className="text-xl font-bold mb-6 text-gray-800">
           {title}
         </h2>
-        
-        {children}
+
+        <div className="max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
+          {children}
+        </div>
       </div>
     </div>
   );

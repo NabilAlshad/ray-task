@@ -1,29 +1,54 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import { useTaskStore } from "@/store/useTaskStore";
+import { applyTaskOptimisticAction } from "@/lib/utils/taskState";
 import { useCurrentUserStore } from "@/store/useCurrentUserStore";
+import { useTaskStore } from "@/store/useTaskStore";
 import { socket } from "@/lib/socket";
-import { canMoveTask, type Task, type TaskDragData, type TaskMovePayload, type TaskStatus } from "@/types";
+import {
+  canMoveTask,
+  type Task,
+  type TaskDragData,
+  type TaskMovePayload,
+  type TaskOptimisticAction,
+  type TaskStatus,
+} from "@/types";
 
-export function useTaskDragLogic() {
-  const { tasks, moveTask } = useTaskStore();
+type UseTaskDragLogicOptions = {
+  tasks: Task[];
+  addOptimisticTask: (action: TaskOptimisticAction) => void;
+};
+
+export function useTaskDragLogic({ tasks, addOptimisticTask }: UseTaskDragLogicOptions) {
+  const { moveTask } = useTaskStore();
   const currentUser = useCurrentUserStore((state) => state.currentUser);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [previewTasks, setPreviewTasks] = useState<Task[] | null>(null);
   const role = currentUser?.role ?? "VIEWER";
   const hasMoveAccess = canMoveTask(role);
 
-  const tasksRef = useRef(tasks);
+  const tasksRef = useRef<Task[]>(tasks);
+  const baseTasksRef = useRef(tasks);
+
   useEffect(() => {
-    tasksRef.current = tasks;
-  }, [tasks]);
+    baseTasksRef.current = tasks;
+
+    if (!previewTasks) {
+      tasksRef.current = tasks;
+    }
+  }, [tasks, previewTasks]);
+
+  const resetPreview = useCallback(() => {
+    setPreviewTasks(null);
+    tasksRef.current = baseTasksRef.current;
+  }, []);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     if (!hasMoveAccess) return;
+    resetPreview();
     const { active } = event;
-    const task = tasksRef.current.find((t) => t.id === active.id);
+    const task = baseTasksRef.current.find((t) => t.id === active.id);
     if (task) setActiveTask(task);
-  }, [hasMoveAccess]);
+  }, [hasMoveAccess, resetPreview]);
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     if (!hasMoveAccess) return;
@@ -34,13 +59,13 @@ export function useTaskDragLogic() {
     const overId = over.id as string;
     const overData = over.data.current as TaskDragData | undefined;
 
-    const activeTask = tasksRef.current.find(t => t.id === activeId);
-    if (!activeTask) return;
+    const activeTaskMatch = tasksRef.current.find((task) => task.id === activeId);
+    if (!activeTaskMatch) return;
 
     let overStatus: TaskStatus;
 
     if (overData?.type === "Task") {
-      const overTask = tasksRef.current.find(t => t.id === overId);
+      const overTask = tasksRef.current.find((task) => task.id === overId);
       if (!overTask) return;
       overStatus = overTask.status;
     } else if (overData?.type === "Column") {
@@ -49,71 +74,86 @@ export function useTaskDragLogic() {
       return;
     }
 
-    if (activeTask.status !== overStatus) {
+    if (activeTaskMatch.status !== overStatus) {
       const destColumnTasks = tasksRef.current
-        .filter(t => t.status === overStatus && t.id !== activeId)
+        .filter((task) => task.status === overStatus && task.id !== activeId)
         .sort((a, b) => a.order - b.order);
 
       let insertIndex = destColumnTasks.length;
       if (overData?.type === "Task") {
-        const overTask = tasksRef.current.find(t => t.id === overId);
+        const overTask = tasksRef.current.find((task) => task.id === overId);
         if (overTask) {
-          insertIndex = destColumnTasks.findIndex(t => t.id === overId);
+          insertIndex = destColumnTasks.findIndex((task) => task.id === overId);
           if (insertIndex === -1) insertIndex = destColumnTasks.length;
         }
       }
 
-      moveTask(activeId, overStatus, insertIndex);
+      const nextPreviewTasks = applyTaskOptimisticAction(tasksRef.current, {
+        type: "move",
+        payload: {
+          id: activeId,
+          status: overStatus,
+          order: insertIndex,
+        },
+      });
+
+      tasksRef.current = nextPreviewTasks;
+      setPreviewTasks(nextPreviewTasks);
     }
-  }, [hasMoveAccess, moveTask]);
+  }, [hasMoveAccess]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     if (!hasMoveAccess) {
+      resetPreview();
       setActiveTask(null);
       return;
     }
     setActiveTask(null);
     const { active, over } = event;
 
-    if (!over) return;
+    if (!over) {
+      resetPreview();
+      return;
+    }
 
     const activeId = active.id as string;
     const overId = over.id as string;
     const overData = over.data.current as TaskDragData | undefined;
 
     const currentTasks = tasksRef.current;
-    const activeTaskMatch = currentTasks.find(t => t.id === activeId);
+    const activeTaskMatch = currentTasks.find((task) => task.id === activeId);
     if (!activeTaskMatch) return;
 
     if (overData?.type === "Task" && activeId !== overId) {
-      const overTask = currentTasks.find(t => t.id === overId);
+      const overTask = currentTasks.find((task) => task.id === overId);
+
       if (overTask && activeTaskMatch.status === overTask.status) {
-        const colTasks = currentTasks
-          .filter(t => t.status === activeTaskMatch.status)
+        const columnTasks = currentTasks
+          .filter((task) => task.status === activeTaskMatch.status)
           .sort((a, b) => a.order - b.order);
 
-        const oldIndex = colTasks.findIndex(t => t.id === activeId);
-        const newIndex = colTasks.findIndex(t => t.id === overId);
+        const oldIndex = columnTasks.findIndex((task) => task.id === activeId);
+        const newIndex = columnTasks.findIndex((task) => task.id === overId);
 
         if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-          const reordered = arrayMove(colTasks, oldIndex, newIndex);
-          reordered.forEach((t, i) => {
-            if (t.order !== i) moveTask(t.id, t.status, i);
-          });
-
           const movedTask: TaskMovePayload = {
             id: activeId,
             status: activeTaskMatch.status,
             order: newIndex,
           };
 
-          socket.emit('taskMoved', movedTask);
+          addOptimisticTask({ type: "move", payload: movedTask });
+          startTransition(() => {
+            moveTask(movedTask.id, movedTask.status, movedTask.order);
+            socket.emit('taskMoved', movedTask);
+          });
+          resetPreview();
           return;
         }
       }
     }
 
-    const finalTask = tasksRef.current.find(t => t.id === activeId);
+    const finalTask = currentTasks.find((task) => task.id === activeId);
     if (finalTask) {
       const movedTask: TaskMovePayload = {
         id: activeId,
@@ -121,12 +161,19 @@ export function useTaskDragLogic() {
         order: finalTask.order,
       };
 
-      socket.emit('taskMoved', movedTask);
+      addOptimisticTask({ type: "move", payload: movedTask });
+      startTransition(() => {
+        moveTask(movedTask.id, movedTask.status, movedTask.order);
+        socket.emit('taskMoved', movedTask);
+      });
     }
-  }, [hasMoveAccess, moveTask]);
+
+    resetPreview();
+  }, [addOptimisticTask, hasMoveAccess, moveTask, resetPreview]);
 
   return {
     activeTask,
+    previewTasks,
     handleDragStart,
     handleDragOver,
     handleDragEnd,

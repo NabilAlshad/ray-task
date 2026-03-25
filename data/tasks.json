@@ -7,11 +7,18 @@
     "order": 0
   },
   {
+    "id": "xjkuiag",
+    "title": "make bun",
+    "description": "",
+    "status": "TODO",
+    "order": 1
+  },
+  {
     "id": "2",
     "title": "Build the TaskCard component",
     "description": "Implement drag and drop functionality",
     "status": "TODO",
-    "order": 1
+    "order": 2
   },
   {
     "id": "3",
@@ -21,24 +28,17 @@
     "order": 0
   },
   {
-    "id": "5",
-    "title": "Deploy to production",
-    "description": "Set up hosting and domains",
+    "id": "6",
+    "title": "Set up CI/CD pipeline",
+    "description": "Automate testing and deployment",
     "status": "DONE",
     "order": 1
   },
   {
-    "id": "6",
-    "title": "Set up CI/CD pipeline",
-    "description": "Automate testing and deployment",
-    "status": "IN_PROGRESS",
-    "order": 0
-  },
-  {
-    "id": "xjkuiag",
-    "title": "make bun",
-    "description": "",
-    "status": "IN_PROGRESS",
-    "order": 1
+    "id": "5",
+    "title": "Deploy to production",
+    "description": "Set up hosting and domains",
+    "status": "DONE",
+    "order": 2
   }
 ]

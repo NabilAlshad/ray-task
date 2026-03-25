@@ -1,0 +1,68 @@
+[
+  {
+    "id": "user-alice-12",
+    "name": "Alice 12",
+    "color": "bg-red-500",
+    "role": "ADMIN"
+  },
+  {
+    "id": "user-bob-22",
+    "name": "Bob 22",
+    "color": "bg-blue-500",
+    "role": "MEMBER"
+  },
+  {
+    "id": "user-charlie-45",
+    "name": "Charlie 45",
+    "color": "bg-green-500",
+    "role": "VIEWER"
+  },
+  {
+    "id": "user-diana-8",
+    "name": "Diana 8",
+    "color": "bg-yellow-500",
+    "role": "ADMIN"
+  },
+  {
+    "id": "user-eve-99",
+    "name": "Eve 99",
+    "color": "bg-purple-500",
+    "role": "MEMBER"
+  },
+  {
+    "id": "user-frank-11",
+    "name": "Frank 11",
+    "color": "bg-pink-500",
+    "role": "VIEWER"
+  },
+  {
+    "id": "user-grace-33",
+    "name": "Grace 33",
+    "color": "bg-indigo-500",
+    "role": "ADMIN"
+  },
+  {
+    "id": "user-heidi-77",
+    "name": "Heidi 77",
+    "color": "bg-teal-500",
+    "role": "MEMBER"
+  },
+  {
+    "id": "user-ivan-12",
+    "name": "Ivan 12",
+    "color": "bg-orange-500",
+    "role": "VIEWER"
+  },
+  {
+    "id": "user-judy-54",
+    "name": "Judy 54",
+    "color": "bg-cyan-500",
+    "role": "MEMBER"
+  },
+  {
+    "id": "271f7f68-be57-448b-8f32-c87e98b8bee4",
+    "name": "sdf",
+    "color": "bg-red-500",
+    "role": "VIEWER"
+  }
+]

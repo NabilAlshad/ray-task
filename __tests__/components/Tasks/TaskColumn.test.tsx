@@ -38,6 +38,7 @@ describe("TaskColumn", () => {
         status="TODO"
         title="To Do"
         tasks={[sampleTasks[0]]}
+        onViewTask={jest.fn()}
         onEditTask={jest.fn()}
         onDeleteTask={jest.fn()}
         canEditTask
@@ -62,6 +63,7 @@ describe("TaskColumn", () => {
         status="TODO"
         title="To Do"
         tasks={[sampleTasks[0]]}
+        onViewTask={jest.fn()}
         onEditTask={jest.fn()}
         onDeleteTask={jest.fn()}
         canEditTask
@@ -79,6 +81,7 @@ describe("TaskColumn", () => {
         status="DONE"
         title="Done"
         tasks={[]}
+        onViewTask={jest.fn()}
         onEditTask={jest.fn()}
         onDeleteTask={jest.fn()}
         canEditTask={false}

@@ -20,6 +20,12 @@ export type TaskDraft = Pick<Task, "title" | "description" | "status">;
 
 export type TaskMovePayload = Pick<Task, "id" | "status" | "order">;
 
+export type TaskOptimisticAction =
+  | { type: "add"; task: Task }
+  | { type: "update"; task: Task }
+  | { type: "delete"; id: Task["id"] }
+  | { type: "move"; payload: TaskMovePayload };
+
 export type TaskColumnDefinition = {
   id: TaskStatus;
   title: string;

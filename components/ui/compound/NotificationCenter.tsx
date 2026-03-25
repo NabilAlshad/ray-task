@@ -1,10 +1,24 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  type LucideIcon,
+  X,
+  XCircle,
+} from "lucide-react";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { cn } from "@/lib/utils/helpers";
+import type { NotificationVariant } from "@/types";
 
-const VARIANT_STYLES = {
+interface NotificationVariantStyle {
+  container: string;
+  badge: string;
+  icon: LucideIcon;
+}
+
+const VARIANT_STYLES: Record<NotificationVariant, NotificationVariantStyle> = {
   success: {
     container: "border-emerald-200 bg-emerald-50 text-emerald-950",
     badge: "bg-emerald-100 text-emerald-700",
@@ -25,7 +39,7 @@ const VARIANT_STYLES = {
     badge: "bg-red-100 text-red-700",
     icon: XCircle,
   },
-} as const;
+};
 
 export function NotificationCenter() {
   const notifications = useNotificationStore((state) => state.notifications);

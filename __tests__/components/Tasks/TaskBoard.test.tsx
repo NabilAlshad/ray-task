@@ -95,10 +95,14 @@ describe("TaskBoard", () => {
     });
     mockUseTaskModalLogic.mockReturnValue({
       isModalOpen: false,
+      isTaskModalOpen: false,
       setIsModalOpen: jest.fn(),
       taskToEdit: null,
+      taskToView: null,
       taskToDelete: null,
       handleOpenAddModal: jest.fn(),
+      handleOpenViewModal: jest.fn(),
+      handleCloseViewModal: jest.fn(),
       handleOpenEditModal: jest.fn(),
       handleSubmitModal: jest.fn(),
       handleRequestDeleteTask: jest.fn(),
@@ -107,6 +111,7 @@ describe("TaskBoard", () => {
     });
     mockUseTaskDragLogic.mockReturnValue({
       activeTask: null,
+      previewTasks: null,
       handleDragStart: jest.fn(),
       handleDragOver: jest.fn(),
       handleDragEnd: jest.fn(),
@@ -121,10 +126,14 @@ describe("TaskBoard", () => {
     useTaskStore.setState({ tasks: sampleTasks });
     mockUseTaskModalLogic.mockReturnValue({
       isModalOpen: false,
+      isTaskModalOpen: false,
       setIsModalOpen: jest.fn(),
       taskToEdit: null,
+      taskToView: null,
       taskToDelete: sampleTasks[0],
       handleOpenAddModal,
+      handleOpenViewModal: jest.fn(),
+      handleCloseViewModal: jest.fn(),
       handleOpenEditModal: jest.fn(),
       handleSubmitModal: jest.fn(),
       handleRequestDeleteTask: jest.fn(),
@@ -168,5 +177,30 @@ describe("TaskBoard", () => {
     render(<TaskBoard />);
 
     expect(screen.getByRole("button", { name: "New Task" })).toBeDisabled();
+  });
+
+  it("renders the task details modal when a task is selected for viewing", () => {
+    useTaskStore.setState({ tasks: sampleTasks });
+    mockUseTaskModalLogic.mockReturnValue({
+      isModalOpen: false,
+      isTaskModalOpen: false,
+      setIsModalOpen: jest.fn(),
+      taskToEdit: null,
+      taskToView: sampleTasks[0],
+      taskToDelete: null,
+      handleOpenAddModal: jest.fn(),
+      handleOpenViewModal: jest.fn(),
+      handleCloseViewModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleSubmitModal: jest.fn(),
+      handleRequestDeleteTask: jest.fn(),
+      handleConfirmDeleteTask: jest.fn(),
+      handleCloseDeleteModal: jest.fn(),
+    });
+
+    render(<TaskBoard />);
+
+    expect(screen.getByRole("heading", { name: "Task Details" })).toBeInTheDocument();
+    expect(screen.getAllByText("Document the board")).toHaveLength(2);
   });
 });

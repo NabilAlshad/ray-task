@@ -44,6 +44,15 @@ export type User = {
   role: UserRole;
 };
 
+export type UserDirectoryEntry = {
+  id: string;
+  name: string;
+  color: string;
+  role: UserRole;
+};
+
+export type UserDirectoryAction = "create" | "delete";
+
 export function canCreateTask(role: UserRole) {
   return USER_ROLE_PERMISSIONS[role].create;
 }

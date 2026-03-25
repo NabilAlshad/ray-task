@@ -1,66 +1,68 @@
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useId, useRef, useState } from "react";
+import { PencilLine, Plus, Users } from "lucide-react";
+import { Button } from "@/components/ui/atomic/Button";
 import { socket } from "@/lib/socket";
+import { useNotificationStore } from "@/store/useNotificationStore";
 import { useCurrentUserStore } from "@/store/useCurrentUserStore";
-import { USER_ROLE_LABELS, type User } from "@/types";
-import { Users } from "lucide-react";
-
-const MOCK_USERS: Array<Omit<User, "id">> = [
-  { name: "Alice 12", color: "bg-red-500", role: "ADMIN" },
-  { name: "Bob 22", color: "bg-blue-500", role: "MEMBER" },
-  { name: "Charlie 45", color: "bg-green-500", role: "VIEWER" },
-  { name: "Diana 8", color: "bg-yellow-500", role: "ADMIN" },
-  { name: "Eve 99", color: "bg-purple-500", role: "MEMBER" },
-  { name: "Frank 11", color: "bg-pink-500", role: "VIEWER" },
-  { name: "Grace 33", color: "bg-indigo-500", role: "ADMIN" },
-  { name: "Heidi 77", color: "bg-teal-500", role: "MEMBER" },
-  { name: "Ivan 12", color: "bg-orange-500", role: "VIEWER" },
-  { name: "Judy 54", color: "bg-cyan-500", role: "MEMBER" },
-];
-
-const ROLE_STYLES = {
-  ADMIN: "bg-red-100 text-red-700",
-  MEMBER: "bg-blue-100 text-blue-700",
-  VIEWER: "bg-slate-100 text-slate-700",
-} as const;
-
-function createRandomUser(): User {
-  const randomUser = MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)];
-
-  return { id: "", ...randomUser };
-}
-
-function mergeUsers(users: User[]) {
-  return users.reduce<User[]>((acc, current) => {
-    const existingUserIndex = acc.findIndex((item) => item.id === current.id);
-    if (existingUserIndex === -1) {
-      return acc.concat([current]);
-    }
-
-    const nextUsers = [...acc];
-    nextUsers[existingUserIndex] = current;
-    return nextUsers;
-  }, []);
-}
+import {
+  USER_ROLE_LABELS,
+  type User,
+  type UserDirectoryAction,
+  type UserDirectoryEntry,
+} from "@/types";
+import { ROLE_STYLES, INITIAL_DIRECTORY_USERS, type UserColorOption } from "./live-users/constants";
+import { createRandomUser, mergeUsers, persistUser, readStoredUser } from "./live-users/storage";
+import { CreateUserModal } from "./live-users/CreateUserModal";
+import { SwitchUserModal } from "./live-users/SwitchUserModal";
 
 export function LiveUsers() {
   const currentUser = useCurrentUserStore((state) => state.currentUser);
   const setCurrentUser = useCurrentUserStore((state) => state.setCurrentUser);
-  const currentUserRef = useRef<User>(currentUser ?? createRandomUser());
+  const addNotification = useNotificationStore((state) => state.addNotification);
+
+  const currentUserRef = useRef<User>(
+    currentUser ?? readStoredUser() ?? createRandomUser(INITIAL_DIRECTORY_USERS),
+  );
+
+  const [directoryUsers, setDirectoryUsers] = useState<UserDirectoryEntry[]>(INITIAL_DIRECTORY_USERS);
   const [activeUsers, setActiveUsers] = useState<User[]>([]);
+  const [isSwitchUserOpen, setIsSwitchUserOpen] = useState(false);
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftColor, setDraftColor] = useState<UserColorOption>("bg-red-500");
+  const [draftRole, setDraftRole] = useState<UserDirectoryEntry["role"]>("VIEWER");
+
+  const roleSelectId = useId();
+  const nameInputId = useId();
 
   useEffect(() => {
     if (!currentUser) {
-      const initialUser = createRandomUser();
+      const initialUser = readStoredUser() ?? createRandomUser(directoryUsers);
       currentUserRef.current = initialUser;
       setCurrentUser(initialUser);
+      persistUser(initialUser);
       return;
     }
 
     currentUserRef.current = currentUser;
-  }, [currentUser, setCurrentUser]);
+  }, [currentUser, directoryUsers, setCurrentUser]);
+
+  const broadcastUser = useCallback((user: User) => {
+    currentUserRef.current = user;
+    setCurrentUser(user);
+    setActiveUsers((prev) => mergeUsers([...prev, user]));
+    persistUser(user);
+
+    if (socket.id) {
+      socket.emit("userJoined", {
+        ...user,
+        id: socket.id,
+      });
+    }
+  }, [setCurrentUser]);
 
   useEffect(() => {
-    socket.on("connect", () => {
+    const handleConnect = () => {
       const me = currentUserRef.current;
       const nextUser = {
         ...me,
@@ -70,40 +72,94 @@ export function LiveUsers() {
       currentUserRef.current = nextUser;
       setCurrentUser(nextUser);
       setActiveUsers((prev) => mergeUsers([...prev, nextUser]));
+      persistUser(nextUser);
 
-      if (socket.recovered) {
-        return;
+      if (!socket.recovered) {
+        socket.emit("userJoined", nextUser);
       }
+    };
 
-      socket.emit("userJoined", nextUser);
-    });
-
-    socket.on("currentUser", (user: User) => {
+    const handleCurrentUser = (user: User) => {
       currentUserRef.current = user;
       setCurrentUser(user);
       setActiveUsers((prev) => mergeUsers([...prev.filter((item) => item.id !== ""), user]));
-    });
+    };
 
-    socket.on("activeUsers", (users: User[]) => {
+    const handleActiveUsers = (users: User[]) => {
       setActiveUsers((prev) => mergeUsers([...prev, ...users]));
-    });
+    };
 
-    socket.on("userJoined", (user: User) => {
+    const handleUserDirectory = (users: UserDirectoryEntry[]) => {
+      setDirectoryUsers(users);
+    };
+
+    const handleUserCreated = (createdUser: UserDirectoryEntry) => {
+      addNotification({
+        title: "User created",
+        message: `"${createdUser.name}" was added to the saved user list.`,
+        variant: "success",
+      });
+
+      broadcastUser({
+        id: socket.id || currentUserRef.current.id || "",
+        name: createdUser.name,
+        color: createdUser.color,
+        role: createdUser.role,
+      });
+
+      setIsCreateUserOpen(false);
+      setIsSwitchUserOpen(false);
+    };
+
+    const handleUserDeleted = (payload: { id: string; name: string }) => {
+      addNotification({
+        title: "User deleted",
+        message: `"${payload.name}" was removed from the saved user list.`,
+        variant: "info",
+      });
+    };
+
+    const handleUserDirectoryError = (payload: {
+      action: UserDirectoryAction;
+      message: string;
+    }) => {
+      addNotification({
+        title: payload.action === "create" ? "Could not create user" : "Could not delete user",
+        message: payload.message,
+        variant: "warning",
+      });
+    };
+
+    const handleUserJoined = (user: User) => {
       setActiveUsers((prev) => mergeUsers([...prev, user]));
-    });
+    };
 
-    socket.on("userLeft", (userId: string) => {
+    const handleUserLeft = (userId: string) => {
       setActiveUsers((prev) => prev.filter((user) => user.id !== userId));
-    });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("currentUser", handleCurrentUser);
+    socket.on("activeUsers", handleActiveUsers);
+    socket.on("userDirectory", handleUserDirectory);
+    socket.on("userCreated", handleUserCreated);
+    socket.on("userDeleted", handleUserDeleted);
+    socket.on("userDirectoryError", handleUserDirectoryError);
+    socket.on("userJoined", handleUserJoined);
+    socket.on("userLeft", handleUserLeft);
 
     return () => {
       socket.off("connect");
       socket.off("currentUser");
       socket.off("activeUsers");
+      socket.off("userDirectory");
+      socket.off("userCreated");
+      socket.off("userDeleted");
+      socket.off("userDirectoryError");
       socket.off("userJoined");
       socket.off("userLeft");
     };
-  }, [setCurrentUser]);
+  }, [addNotification, broadcastUser, setCurrentUser]);
 
   const roleLabel = USER_ROLE_LABELS[currentUser?.role ?? "VIEWER"];
   const accessSummary =
@@ -112,6 +168,62 @@ export function LiveUsers() {
       : currentUser?.role === "MEMBER"
         ? "Can create, edit, and move"
         : "Read-only";
+  const canManageSavedUsers = currentUser?.role === "ADMIN";
+
+  const handleOpenSwitchUser = () => {
+    const fallbackUser = currentUser ?? currentUserRef.current;
+    setDraftName(fallbackUser.name);
+    setDraftColor(fallbackUser.color as UserColorOption);
+    setDraftRole(fallbackUser.role);
+    setIsSwitchUserOpen(true);
+  };
+
+  const handleOpenCreateUser = () => {
+    const fallbackUser = currentUser ?? currentUserRef.current;
+    setDraftName("");
+    setDraftColor(fallbackUser.color as UserColorOption);
+    setDraftRole("VIEWER");
+    setIsCreateUserOpen(true);
+  };
+
+  const handleCloseCreateUser = () => {
+    setIsCreateUserOpen(false);
+  };
+
+  const handleSubmitSwitchUser = (event: FormEvent) => {
+    event.preventDefault();
+
+    const actingUser = currentUser ?? currentUserRef.current;
+
+    if (actingUser) {
+      socket.emit("userJoined", {
+        id: socket.id || actingUser.id || "",
+        name: actingUser.name,
+        color: actingUser.color,
+        role: actingUser.role,
+      });
+    }
+
+    socket.emit("createUser", {
+      name: draftName.trim() || "Guest",
+      color: draftColor,
+      role: draftRole,
+    });
+  };
+
+  const handleSelectPresetUser = (presetUser: UserDirectoryEntry) => {
+    broadcastUser({
+      id: socket.id || currentUser?.id || currentUserRef.current.id || "",
+      name: presetUser.name,
+      color: presetUser.color,
+      role: presetUser.role,
+    });
+    setIsSwitchUserOpen(false);
+  };
+
+  const handleDeletePresetUser = (userId: string) => {
+    socket.emit("deleteUser", userId);
+  };
 
   return (
     <div className="sticky top-0 z-10 w-full border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
@@ -152,32 +264,82 @@ export function LiveUsers() {
           ) : null}
         </div>
 
-        <div className="hidden sm:flex items-center gap-4 lg:ml-4 lg:pl-6 lg:border-l lg:border-gray-200">
-          <div className="flex flex-col items-end text-xs">
-            <span className="font-semibold text-gray-800 text-sm">
-              {currentUser?.name ?? "Connecting..."}
-            </span>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${ROLE_STYLES[currentUser?.role ?? "VIEWER"]}`}>
-                {roleLabel}
+        <div className="flex items-center justify-between gap-3 sm:justify-end lg:ml-4 lg:pl-6 lg:border-l lg:border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col text-xs sm:items-end">
+              <span className="font-semibold text-gray-800 text-sm">
+                {currentUser?.name ?? "Connecting..."}
               </span>
-              <span className="text-gray-400 font-medium ml-1">
-                {accessSummary}
-              </span>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1 sm:justify-end">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${ROLE_STYLES[currentUser?.role ?? "VIEWER"]}`}
+                >
+                  {roleLabel}
+                </span>
+                <span className="font-medium text-gray-400">{accessSummary}</span>
+              </div>
             </div>
+
+            {currentUser ? (
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold uppercase text-white shadow-sm ring-2 ring-white ${currentUser.color}`}
+                title="Your Profile"
+              >
+                {currentUser.name.charAt(0)}
+              </div>
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
+            )}
           </div>
-          {currentUser ? (
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold uppercase text-white shadow-sm ring-2 ring-white ${currentUser.color}`}
-              title="Your Profile"
+
+          <div className="flex items-center gap-2">
+            {canManageSavedUsers ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenCreateUser}
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Create User
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenSwitchUser}
             >
-              {currentUser.name.charAt(0)}
-            </div>
-          ) : (
-            <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
-          )}
+              <PencilLine className="mr-1.5 h-3.5 w-3.5" />
+              Switch User
+            </Button>
+          </div>
         </div>
       </div>
+
+      <SwitchUserModal
+        isOpen={isSwitchUserOpen}
+        onClose={() => setIsSwitchUserOpen(false)}
+        currentUser={currentUser}
+        directoryUsers={directoryUsers}
+        canManageSavedUsers={canManageSavedUsers}
+        onSelectPresetUser={handleSelectPresetUser}
+        onDeletePresetUser={handleDeletePresetUser}
+      />
+
+      <CreateUserModal
+        isOpen={isCreateUserOpen}
+        onClose={handleCloseCreateUser}
+        draftName={draftName}
+        draftColor={draftColor}
+        draftRole={draftRole}
+        nameInputId={nameInputId}
+        roleSelectId={roleSelectId}
+        onDraftNameChange={setDraftName}
+        onDraftColorChange={setDraftColor}
+        onDraftRoleChange={setDraftRole}
+        onSubmit={handleSubmitSwitchUser}
+      />
     </div>
   );
 }

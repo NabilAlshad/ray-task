@@ -31,12 +31,14 @@ describe("TaskCard", () => {
 
   it("renders task details and fires edit/delete actions", async () => {
     const user = userEvent.setup();
+    const onView = jest.fn();
     const onEdit = jest.fn();
     const onDelete = jest.fn();
 
     render(
       <TaskCard
         task={sampleTasks[0]}
+        onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
         canEdit
@@ -48,9 +50,11 @@ describe("TaskCard", () => {
     expect(screen.getByText("Write docs")).toBeInTheDocument();
     expect(screen.getByText("Document the board")).toBeInTheDocument();
 
+    await user.click(screen.getByRole("button", { name: "View task Write docs" }));
     await user.click(screen.getByRole("button", { name: "Edit task Write docs" }));
     await user.click(screen.getByRole("button", { name: "Delete task Write docs" }));
 
+    expect(onView).toHaveBeenCalledWith(sampleTasks[0]);
     expect(onEdit).toHaveBeenCalledWith(sampleTasks[0]);
     expect(onDelete).toHaveBeenCalledWith(sampleTasks[0]);
   });
@@ -59,6 +63,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={{ ...sampleTasks[0], description: undefined }}
+        onView={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         canEdit
@@ -74,6 +79,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={sampleTasks[0]}
+        onView={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         canEdit={false}

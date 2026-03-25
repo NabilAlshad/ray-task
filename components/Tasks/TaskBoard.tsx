@@ -7,12 +7,15 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { useOptimistic } from "react";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { TaskColumn } from "./TaskColumn";
 import { TaskCard } from "./TaskCard";
+import { TaskDetailsModal } from "./TaskDetailsModal";
 import { TaskModal } from "./TaskModal";
 import { ConfirmationModal } from "@/components/Tasks/ConfirmationModal";
 import { NotificationCenter } from "@/components/ui/compound/NotificationCenter";
+import { applyTaskOptimisticAction } from "@/lib/utils/taskState";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useCurrentUserStore } from "@/store/useCurrentUserStore";
 import {
@@ -30,24 +33,37 @@ import { useTaskDragLogic } from "@/lib/hooks/useTaskDragLogic";
 export function TaskBoard() {
   const tasks = useTaskStore((state) => state.tasks);
   const currentUser = useCurrentUserStore((state) => state.currentUser);
+  const [optimisticTasks, addOptimisticTask] = useOptimistic(tasks, applyTaskOptimisticAction);
 
   useTaskSocket();
 
   const {
     isModalOpen,
+    isTaskModalOpen,
     setIsModalOpen,
     taskToEdit,
+    taskToView,
     taskToDelete,
     handleOpenAddModal,
+    handleOpenViewModal,
+    handleCloseViewModal,
     handleOpenEditModal,
     handleSubmitModal,
     handleRequestDeleteTask,
     handleConfirmDeleteTask,
     handleCloseDeleteModal,
-  } = useTaskModalLogic();
+  } = useTaskModalLogic({
+    tasks: optimisticTasks,
+    addOptimisticTask,
+  });
 
-  const { activeTask, handleDragStart, handleDragOver, handleDragEnd } =
-    useTaskDragLogic();
+  const { activeTask, previewTasks, handleDragStart, handleDragOver, handleDragEnd } =
+    useTaskDragLogic({
+      tasks: optimisticTasks,
+      addOptimisticTask,
+    });
+
+  const displayedTasks = previewTasks ?? optimisticTasks;
 
   const role = currentUser?.role ?? "VIEWER";
   const canCreate = canCreateTask(role);
@@ -107,7 +123,7 @@ export function TaskBoard() {
         >
           <div className="flex flex-col md:flex-row gap-6 md:items-start select-none">
             {columns.map((col) => {
-              const columnTasks = tasks
+              const columnTasks = displayedTasks
                 .filter((t) => t.status === col.id)
                 .sort((a, b) => a.order - b.order);
 
@@ -117,6 +133,7 @@ export function TaskBoard() {
                   status={col.id}
                   title={col.title}
                   tasks={columnTasks}
+                  onViewTask={handleOpenViewModal}
                   onEditTask={handleOpenEditModal}
                   onDeleteTask={handleRequestDeleteTask}
                   canEditTask={canEdit}
@@ -132,6 +149,7 @@ export function TaskBoard() {
               <div className="opacity-80 rotate-2 scale-105 transition-transform shadow-2xl">
                 <TaskCard
                   task={activeTask}
+                  onView={() => {}}
                   onEdit={() => {}}
                   onDelete={() => {}}
                   canEdit={false}
@@ -146,10 +164,16 @@ export function TaskBoard() {
 
       <TaskModal
         key={`${taskToEdit?.id ?? "new"}-${isModalOpen ? "open" : "closed"}`}
-        isOpen={isModalOpen}
+        isOpen={isTaskModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmitModal}
         taskToEdit={taskToEdit}
+      />
+
+      <TaskDetailsModal
+        isOpen={Boolean(taskToView)}
+        onClose={handleCloseViewModal}
+        task={taskToView}
       />
 
       <ConfirmationModal
