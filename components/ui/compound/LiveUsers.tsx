@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { socket } from "@/lib/socket";
-import { User } from "@/types";
+import type { User } from "@/types";
 import { Users } from "lucide-react";
 
 const COLORS = [
@@ -14,38 +14,59 @@ const NAMES = [
   "Frank", "Grace", "Heidi", "Ivan", "Judy"
 ];
 
+function createRandomUser(): User {
+  const randomName =
+    NAMES[Math.floor(Math.random() * NAMES.length)] + " " + Math.floor(Math.random() * 100);
+  const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+  return { id: "", name: randomName, color: randomColor };
+}
+
 export function LiveUsers() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User>(createRandomUser);
+  const currentUserRef = useRef<User>(currentUser);
   const [activeUsers, setActiveUsers] = useState<User[]>([]);
 
   useEffect(() => {
-   
-    const randomName = NAMES[Math.floor(Math.random() * NAMES.length)] + " " + Math.floor(Math.random() * 100);
-    const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-    
-    
-    const me: User = { id: "", name: randomName, color: randomColor };
-    setCurrentUser(me);
+    const me = currentUserRef.current;
 
     socket.on('connect', () => {
-      me.id = socket.id || "local-" + Math.random().toString(36).substr(2, 5);
-      setCurrentUser({ ...me });
-      socket.emit('userJoined', me);
-    
-      setActiveUsers((prev) => [...prev, me].reduce((acc, current) => {
-        const x = acc.find(item => item.id === current.id);
-        if (!x) return acc.concat([current]); else return acc;
-      }, [] as User[]));
+      const nextUser = {
+        ...me,
+        id: socket.id || me.id || "local-" + Math.random().toString(36).substring(2, 7),
+      };
+
+      currentUserRef.current = nextUser;
+      setCurrentUser(nextUser);
+
+      setActiveUsers((prev) =>
+        [...prev, nextUser].reduce((acc, current) => {
+          const existingUser = acc.find((item) => item.id === current.id);
+          return existingUser ? acc : acc.concat([current]);
+        }, [] as User[]),
+      );
+
+      if (socket.recovered) {
+        return;
+      }
+
+      socket.emit('userJoined', nextUser);
+    });
+
+    socket.on('activeUsers', (users: User[]) => {
+      setActiveUsers((prev) =>
+        [...prev, ...users].reduce((acc, current) => {
+          const existingUser = acc.find((item) => item.id === current.id);
+          return existingUser ? acc : acc.concat([current]);
+        }, [] as User[]),
+      );
     });
 
     socket.on('userJoined', (user: User) => {
       setActiveUsers((prev) => {
-        // Prevent duplicates
         if (prev.find(u => u.id === user.id)) return prev;
         return [...prev, user];
       });
-      // Broadcast back so new user knows about us
-      if (me.id) socket.emit('userJoined', me);
     });
 
     socket.on('userLeft', (userId: string) => {
@@ -54,12 +75,11 @@ export function LiveUsers() {
 
     return () => {
       socket.off('connect');
+      socket.off('activeUsers');
       socket.off('userJoined');
       socket.off('userLeft');
     };
   }, []);
-
-  if (!currentUser) return null;
 
   return (
     <div className="flex items-center gap-3 bg-white px-4 py-2 border-b border-gray-200 shadow-sm w-full sticky top-0 z-10 h-14">

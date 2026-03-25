@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Task, TaskStatus, TaskStore } from '@/types';
+import type { Task, TaskStore } from '@/types';
 
 const INITIAL_TASKS: Task[] = [];
 
@@ -24,27 +24,21 @@ export const useTaskStore = create<TaskStore>((set) => ({
 
     const updatedTasks = [...state.tasks];
     const [task] = updatedTasks.splice(taskIndex, 1);
-    
-    // Create updated task
+
     const updatedTask = { ...task, status: newStatus };
-    
-    // Sort remaining tasks in the destination column by order
+
     const columnTasks = updatedTasks
       .filter(t => t.status === newStatus)
       .sort((a, b) => a.order - b.order);
-      
-    // Insert into new order position
+
     columnTasks.splice(newOrder, 0, updatedTask);
-    
-    // Re-assign proper consecutive orders to all in the column
+
     columnTasks.forEach((t, index) => {
       t.order = index;
     });
 
-    // We now replace all matching column tasks in our global list with the newly reordered ones
-    // and push the updated task as well.
     const nonColumnTasks = updatedTasks.filter(t => t.status !== newStatus);
-    
+
     return { tasks: [...nonColumnTasks, ...columnTasks] };
   }),
 

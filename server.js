@@ -1,12 +1,14 @@
-import { createServer } from 'http';
-import { parse } from 'url';
-import next from 'next';
-import { Server } from 'socket.io';
-import fs from 'fs';
+import fs from "fs";
+import { createServer } from "http";
+import next from "next";
+import { Server } from "socket.io";
+import { parse } from "url";
 
-const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
+const dev = process.env.NODE_ENV !== "production";
+const hostname = "localhost";
 const port = 3000;
+const boardRoom = "task-board";
+const recoveryWindowMs = 2 * 60 * 1000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
@@ -15,111 +17,203 @@ app.prepare().then(() => {
     try {
       const parsedUrl = parse(req.url, true);
       await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('Error occurred handling', req.url, err);
+    } catch (error) {
+      console.error("Error occurred handling", req.url, error);
       res.statusCode = 500;
-      res.end('internal server error');
+      res.end("internal server error");
     }
   });
 
   const io = new Server(server, {
-    cors: { origin: '*' }
+    cors: { origin: "*" },
+    transports: ["websocket"],
+    connectionStateRecovery: {
+      maxDisconnectionDuration: recoveryWindowMs,
+      skipMiddlewares: true,
+    },
   });
 
-  const DB_PATH = './data/tasks.json';
-  
-  // Default tasks to show
+  const DB_PATH = "./data/tasks.json";
   const defaultTasks = [
-    { id: '1', title: 'Design the homepage layout', description: 'Create wireframes and mockups', status: 'DONE', order: 0 },
-    { id: '2', title: 'Build the TaskCard component', description: 'Implement drag and drop functionality', status: 'DONE', order: 1 },
-    { id: '3', title: 'Integrate API endpoints', description: 'Connect frontend to backend', status: 'IN_PROGRESS', order: 0 },
-    { id: '4', title: 'Write unit tests', description: 'Ensure code quality', status: 'IN_PROGRESS', order: 1 },
-    { id: '5', title: 'Deploy to production', description: 'Set up hosting and domains', status: 'TODO', order: 0 },
-    { id: '6', title: 'Set up CI/CD pipeline', description: 'Automate testing and deployment', status: 'TODO', order: 1 },
+    {
+      id: "1",
+      title: "Design the homepage layout",
+      description: "Create wireframes and mockups",
+      status: "DONE",
+      order: 0,
+    },
+    {
+      id: "2",
+      title: "Build the TaskCard component",
+      description: "Implement drag and drop functionality",
+      status: "DONE",
+      order: 1,
+    },
+    {
+      id: "3",
+      title: "Integrate API endpoints",
+      description: "Connect frontend to backend",
+      status: "IN_PROGRESS",
+      order: 0,
+    },
+    {
+      id: "4",
+      title: "Write unit tests",
+      description: "Ensure code quality",
+      status: "IN_PROGRESS",
+      order: 1,
+    },
+    {
+      id: "5",
+      title: "Deploy to production",
+      description: "Set up hosting and domains",
+      status: "TODO",
+      order: 0,
+    },
+    {
+      id: "6",
+      title: "Set up CI/CD pipeline",
+      description: "Automate testing and deployment",
+      status: "TODO",
+      order: 1,
+    },
   ];
 
-  // Helper to read/write from local "DB"
   const getTasksFromDB = () => {
     try {
       if (fs.existsSync(DB_PATH)) {
-        const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+        const data = JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
         if (Array.isArray(data) && data.length > 0) {
           return data;
         }
       }
-    } catch(e) {}
-    
-    // If we reach here, no valid data exists. Write default tasks and return them.
+    } catch {}
+
     try {
       fs.writeFileSync(DB_PATH, JSON.stringify(defaultTasks, null, 2));
-    } catch(e) {}
-    
+    } catch {}
+
     return [...defaultTasks];
   };
-  
+
   const saveTasksToDB = (tasks) => {
     fs.writeFileSync(DB_PATH, JSON.stringify(tasks, null, 2));
+  };
+  const pendingUserLeaves = new Map();
+
+  const getActiveUsers = () => {
+    return [...io.of("/").sockets.values()]
+      .filter((clientSocket) => clientSocket.rooms.has(boardRoom) && clientSocket.data.user)
+      .map((clientSocket) => clientSocket.data.user);
   };
 
   let currentTasks = getTasksFromDB();
 
-  io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+  io.on("connection", (socket) => {
+    socket.join(boardRoom);
 
-    // Send the current fully updated task list upon connection
-    socket.emit('initTasks', currentTasks);
+    if (socket.data.user?.id && pendingUserLeaves.has(socket.data.user.id)) {
+      clearTimeout(pendingUserLeaves.get(socket.data.user.id));
+      pendingUserLeaves.delete(socket.data.user.id);
+    }
 
-    // Initial broadcasting when tasks change
-    socket.on('taskMoved', (data) => {
-      // Find and update local array
-      const taskIndex = currentTasks.findIndex(t => t.id === data.id);
+    console.log(
+      socket.recovered ? "Client reconnected with recovery:" : "Client connected:",
+      socket.id,
+    );
+
+    if (socket.recovered) {
+      if (socket.data.user) {
+        socket.to(boardRoom).emit("userJoined", socket.data.user);
+      }
+
+      socket.emit(
+        "activeUsers",
+        getActiveUsers().filter((user) => user.id !== socket.data.user?.id),
+      );
+    } else {
+      socket.emit("initTasks", currentTasks);
+      socket.emit(
+        "activeUsers",
+        getActiveUsers().filter((user) => user.id !== socket.id),
+      );
+    }
+
+    socket.on("taskMoved", (data) => {
+      const taskIndex = currentTasks.findIndex((task) => task.id === data.id);
       if (taskIndex !== -1) {
-        const [task] = currentTasks.splice(taskIndex, 1);
-        const updatedTask = { ...task, status: data.status };
-        const columnTasks = currentTasks
-          .filter(t => t.status === data.status)
+        const updatedTasks = [...currentTasks];
+        const [task] = updatedTasks.splice(taskIndex, 1);
+        const movedTask = { ...task, status: data.status };
+
+        const columnTasks = updatedTasks
+          .filter((item) => item.status === data.status)
           .sort((a, b) => a.order - b.order);
-        columnTasks.splice(data.order, 0, updatedTask);
-        columnTasks.forEach((t, i) => t.order = i);
-        
-        currentTasks = [...currentTasks.filter(t => t.status !== data.status), ...columnTasks];
+
+        columnTasks.splice(data.order, 0, movedTask);
+        columnTasks.forEach((item, index) => {
+          item.order = index;
+        });
+
+        currentTasks = [
+          ...updatedTasks.filter((item) => item.status !== data.status),
+          ...columnTasks,
+        ];
         saveTasksToDB(currentTasks);
       }
-      
-      socket.broadcast.emit('taskMoved', data);
+
+      socket.to(boardRoom).emit("taskMoved", data);
     });
 
-    socket.on('taskAdded', (newTask) => {
+    socket.on("taskAdded", (newTask) => {
       currentTasks.push(newTask);
       saveTasksToDB(currentTasks);
-      socket.broadcast.emit('taskAdded', newTask);
+      socket.to(boardRoom).emit("taskAdded", newTask);
     });
 
-    socket.on('taskUpdated', (updatedTask) => {
-      currentTasks = currentTasks.map(t => t.id === updatedTask.id ? updatedTask : t);
+    socket.on("taskUpdated", (updatedTask) => {
+      currentTasks = currentTasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task,
+      );
       saveTasksToDB(currentTasks);
-      socket.broadcast.emit('taskUpdated', updatedTask);
+      socket.to(boardRoom).emit("taskUpdated", updatedTask);
     });
 
-    socket.on('taskDeleted', (id) => {
-      currentTasks = currentTasks.filter(t => t.id !== id);
+    socket.on("taskDeleted", (id) => {
+      currentTasks = currentTasks.filter((task) => task.id !== id);
       saveTasksToDB(currentTasks);
-      socket.broadcast.emit('taskDeleted', id);
+      socket.to(boardRoom).emit("taskDeleted", id);
     });
 
-    // Real-time user presence
-    socket.on('userJoined', (user) => {
-      socket.broadcast.emit('userJoined', user);
+    socket.on("userJoined", (user) => {
+      socket.data.user = user;
+      if (pendingUserLeaves.has(user.id)) {
+        clearTimeout(pendingUserLeaves.get(user.id));
+        pendingUserLeaves.delete(user.id);
+      }
+      socket.to(boardRoom).emit("userJoined", user);
     });
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-      socket.broadcast.emit('userLeft', socket.id);
+    socket.on("disconnect", (reason) => {
+      console.log("Client disconnected:", socket.id, reason);
+
+      const userId = socket.data.user?.id || socket.id;
+      if (reason === "client namespace disconnect") {
+        socket.to(boardRoom).emit("userLeft", userId);
+        return;
+      }
+
+      const leaveTimer = setTimeout(() => {
+        pendingUserLeaves.delete(userId);
+        socket.to(boardRoom).emit("userLeft", userId);
+      }, recoveryWindowMs);
+
+      pendingUserLeaves.set(userId, leaveTimer);
     });
   });
 
-  server.once('error', (err) => {
-    console.error(err);
+  server.once("error", (error) => {
+    console.error(error);
     process.exit(1);
   });
 

@@ -121,18 +121,54 @@ mkdir -p data
 
 ## 🌐 Environment Variables
 
-Create a `.env.local` file in the project root:
+This project uses a layered env setup:
+
+`.env`
 
 ```env
-# The public URL of your server (used by the Socket.IO client)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
+
+Shared safe defaults.
+
+`.env.example`
+
+```env
+NEXT_PUBLIC_SITE_URL=YOUR_PUBLIC_SITE_URL
+```
+
+Committed reference template with placeholder-safe values.
+
+`.env.local`
+
+```env
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+Personal local overrides. This file is gitignored.
+
+`.env.development`
+
+```env
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+Committed development defaults.
+
+`.env.production`
+
+```env
+NEXT_PUBLIC_SITE_URL=https://mock-task-board.example.com
+```
+
+Committed production defaults with a mocked non-secret URL for now.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | URL the browser uses to connect to the Socket.IO server |
 
-> If this variable is not set, `lib/socket.ts` automatically falls back to `http://localhost:3000`.
+Next.js loads these by environment, with `.env.local` overriding the committed defaults on your machine.
+The production URL above is a placeholder for now. Replace it with your real deployed domain when production is ready.
 
 ---
 

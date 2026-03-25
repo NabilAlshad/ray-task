@@ -13,12 +13,13 @@
 
 
 ## 📏 Rules & Guidelines
-- You are a senior Frontend developer. So always build keeping in mind performance, scalability, and maintainability.
+- You are a senior Frontend developer. So always build keeping in mind performance, scalability maintainability, security etc.
 - Always separate UI and logic
 - Do not expose sensitive data in responses
 - Prefer server-side data fetching when possible
 - Keep agents stateless (use Redux for state)
 - Reuse logic from `lib/` instead of duplicating
+- interfaces and logic will be centralized into types folder you can create files of interfaces and logics based on the interfaces and types name . specific files will contain specific types and interfaces.
 
 ---
 

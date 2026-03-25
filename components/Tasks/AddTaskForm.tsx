@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { AddTaskFormProps } from '@/types';
+import { Input } from '@/components/ui/atomic/Input';
+import { Button } from '@/components/ui/atomic/Button';
 
 export default function AddTaskForm({ onAdd }: AddTaskFormProps) {
   const [value, setValue] = useState('');
@@ -19,20 +21,20 @@ export default function AddTaskForm({ onAdd }: AddTaskFormProps) {
       onSubmit={handleSubmit}
       className="flex gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-5 py-4 backdrop-blur-sm"
     >
-      <input
+      <Input
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Enter a new task…"
-        className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/30 transition"
+        className="flex-1 bg-white/5 text-white placeholder:text-white/30 border-white/10 focus-visible:ring-blue-400/30"
       />
-      <button
+      <Button
         type="submit"
         disabled={!value.trim()}
-        className="rounded-xl bg-blue-500 px-5 py-2 text-sm font-semibold text-white shadow transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-40"
+        className="shrink-0"
       >
         + Add Task
-      </button>
+      </Button>
     </form>
   );
 }

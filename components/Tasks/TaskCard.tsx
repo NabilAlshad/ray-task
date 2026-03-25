@@ -1,16 +1,21 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Task } from "@/types";
-import { cn } from "@/lib/utils";
-import { GripVertical, Edit2, Trash2 } from "lucide-react";
+import type { TaskCardProps, TaskDragItemData } from "@/types";
+import { cn } from "@/lib/utils/helpers";
+import { Edit2, Trash2 } from "lucide-react";
 
-interface TaskCardProps {
-  task: Task;
-  onEdit: (task: Task) => void;
-  onDelete: (id: string) => void;
-}
+import { memo } from "react";
 
-export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({
+  task,
+  onEdit,
+  onDelete,
+}: TaskCardProps) {
+  const sortableData: TaskDragItemData = {
+    type: "Task",
+    task,
+  };
+
   const {
     attributes,
     listeners,
@@ -20,10 +25,7 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
     isDragging,
   } = useSortable({
     id: task.id,
-    data: {
-      type: "Task",
-      task,
-    },
+    data: sortableData,
   });
 
   const style = {
@@ -37,7 +39,7 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
       style={style}
       className={cn(
         "bg-white group relative rounded-xl shadow-sm border border-gray-200 p-4 mb-3 flex flex-col gap-2 hover:shadow-md transition-shadow cursor-grab",
-        isDragging && "opacity-50 border-blue-500 shadow-lg"
+        isDragging && "opacity-50 border-blue-500 shadow-lg",
       )}
       {...attributes}
       {...listeners}
@@ -48,33 +50,35 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
         </h4>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(task);
             }}
             className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600 transition-colors"
+            aria-label={`Edit task ${task.title}`}
+            title={`Edit task ${task.title}`}
           >
             <Edit2 className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(task.id);
+              onDelete(task);
             }}
             className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600 transition-colors"
+            aria-label={`Delete task ${task.title}`}
+            title={`Delete task ${task.title}`}
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
-      
-      {task.description && (
-        <p className="text-sm text-gray-500 line-clamp-3">
-          {task.description}
-        </p>
-      )}
 
-      {/* Drag Handle explicitly (if needed, but sorting is on the whole card) */}
+      {task.description && (
+        <p className="text-sm text-gray-500 line-clamp-3">{task.description}</p>
+      )}
     </div>
   );
-}
+});
