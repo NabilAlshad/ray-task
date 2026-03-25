@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TaskBoard } from "@/components/Tasks/TaskBoard";
 import { sampleTasks } from "@/test-utils/sampleTasks";
+import { useCurrentUserStore } from "@/store/useCurrentUserStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
@@ -70,6 +71,14 @@ jest.mock("@/lib/hooks/useTaskDragLogic", () => ({
 describe("TaskBoard", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useCurrentUserStore.setState({
+      currentUser: {
+        id: "user-1",
+        name: "Admin User",
+        color: "bg-blue-500",
+        role: "ADMIN",
+      },
+    });
     useTaskStore.setState({ tasks: [] });
     useNotificationStore.setState({ notifications: [] });
     mockUseDroppable.mockReturnValue({
@@ -144,5 +153,20 @@ describe("TaskBoard", () => {
 
     expect(screen.queryByRole("button", { name: "Yes, delete" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Project Board" })).toBeInTheDocument();
+  });
+
+  it("disables task creation for viewers", () => {
+    useCurrentUserStore.setState({
+      currentUser: {
+        id: "user-2",
+        name: "Viewer User",
+        color: "bg-gray-500",
+        role: "VIEWER",
+      },
+    });
+
+    render(<TaskBoard />);
+
+    expect(screen.getByRole("button", { name: "New Task" })).toBeDisabled();
   });
 });

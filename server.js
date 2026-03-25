@@ -79,6 +79,61 @@ app.prepare().then(() => {
     },
   ];
 
+  const assignUserRole = () => {
+    const activeRoles = new Set(getActiveUsers().map((user) => user.role));
+
+    if (!activeRoles.has("ADMIN")) {
+      return "ADMIN";
+    }
+
+    if (!activeRoles.has("MEMBER")) {
+      return "MEMBER";
+    }
+
+    return "VIEWER";
+  };
+
+  const normalizeUser = (user, socketId) => {
+    const name = typeof user?.name === "string" && user.name.trim() ? user.name.trim() : "Guest";
+    const color =
+      typeof user?.color === "string" && user.color.trim() ? user.color : "bg-slate-500";
+    const role =
+      user?.role === "ADMIN" || user?.role === "MEMBER" || user?.role === "VIEWER"
+        ? user.role
+        : assignUserRole();
+
+    return {
+      id: socketId,
+      name,
+      color,
+      role,
+    };
+  };
+
+  const hasPermission = (user, action) => {
+    if (!user) {
+      return false;
+    }
+
+    if (user.role === "ADMIN") {
+      return true;
+    }
+
+    if (user.role === "MEMBER") {
+      return action !== "delete";
+    }
+
+    return false;
+  };
+
+  const denyPermission = (socket, action, userRole) => {
+    socket.emit("permissionDenied", {
+      action,
+      role: userRole || "VIEWER",
+    });
+    socket.emit("initTasks", currentTasks);
+  };
+
   const getTasksFromDB = () => {
     try {
       if (fs.existsSync(DB_PATH)) {
@@ -124,6 +179,7 @@ app.prepare().then(() => {
 
     if (socket.recovered) {
       if (socket.data.user) {
+        socket.emit("currentUser", socket.data.user);
         socket.to(boardRoom).emit("userJoined", socket.data.user);
       }
 
@@ -140,6 +196,11 @@ app.prepare().then(() => {
     }
 
     socket.on("taskMoved", (data) => {
+      if (!hasPermission(socket.data.user, "move")) {
+        denyPermission(socket, "move", socket.data.user?.role);
+        return;
+      }
+
       const taskIndex = currentTasks.findIndex((task) => task.id === data.id);
       if (taskIndex !== -1) {
         const updatedTasks = [...currentTasks];
@@ -166,12 +227,22 @@ app.prepare().then(() => {
     });
 
     socket.on("taskAdded", (newTask) => {
+      if (!hasPermission(socket.data.user, "create")) {
+        denyPermission(socket, "create", socket.data.user?.role);
+        return;
+      }
+
       currentTasks.push(newTask);
       saveTasksToDB(currentTasks);
       socket.to(boardRoom).emit("taskAdded", newTask);
     });
 
     socket.on("taskUpdated", (updatedTask) => {
+      if (!hasPermission(socket.data.user, "update")) {
+        denyPermission(socket, "update", socket.data.user?.role);
+        return;
+      }
+
       currentTasks = currentTasks.map((task) =>
         task.id === updatedTask.id ? updatedTask : task,
       );
@@ -180,18 +251,25 @@ app.prepare().then(() => {
     });
 
     socket.on("taskDeleted", (id) => {
+      if (!hasPermission(socket.data.user, "delete")) {
+        denyPermission(socket, "delete", socket.data.user?.role);
+        return;
+      }
+
       currentTasks = currentTasks.filter((task) => task.id !== id);
       saveTasksToDB(currentTasks);
       socket.to(boardRoom).emit("taskDeleted", id);
     });
 
     socket.on("userJoined", (user) => {
-      socket.data.user = user;
-      if (pendingUserLeaves.has(user.id)) {
-        clearTimeout(pendingUserLeaves.get(user.id));
-        pendingUserLeaves.delete(user.id);
+      const normalizedUser = normalizeUser(user, socket.id);
+      socket.data.user = normalizedUser;
+      if (pendingUserLeaves.has(normalizedUser.id)) {
+        clearTimeout(pendingUserLeaves.get(normalizedUser.id));
+        pendingUserLeaves.delete(normalizedUser.id);
       }
-      socket.to(boardRoom).emit("userJoined", user);
+      socket.emit("currentUser", normalizedUser);
+      socket.to(boardRoom).emit("userJoined", normalizedUser);
     });
 
     socket.on("disconnect", (reason) => {

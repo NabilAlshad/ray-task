@@ -2,12 +2,16 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useTaskStore } from "@/store/useTaskStore";
+import { useCurrentUserStore } from "@/store/useCurrentUserStore";
 import { socket } from "@/lib/socket";
-import type { Task, TaskDragData, TaskMovePayload, TaskStatus } from "@/types";
+import { canMoveTask, type Task, type TaskDragData, type TaskMovePayload, type TaskStatus } from "@/types";
 
 export function useTaskDragLogic() {
   const { tasks, moveTask } = useTaskStore();
+  const currentUser = useCurrentUserStore((state) => state.currentUser);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const role = currentUser?.role ?? "VIEWER";
+  const hasMoveAccess = canMoveTask(role);
 
   const tasksRef = useRef(tasks);
   useEffect(() => {
@@ -15,12 +19,14 @@ export function useTaskDragLogic() {
   }, [tasks]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    if (!hasMoveAccess) return;
     const { active } = event;
     const task = tasksRef.current.find((t) => t.id === active.id);
     if (task) setActiveTask(task);
-  }, []);
+  }, [hasMoveAccess]);
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
+    if (!hasMoveAccess) return;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -59,9 +65,13 @@ export function useTaskDragLogic() {
 
       moveTask(activeId, overStatus, insertIndex);
     }
-  }, [moveTask]);
+  }, [hasMoveAccess, moveTask]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    if (!hasMoveAccess) {
+      setActiveTask(null);
+      return;
+    }
     setActiveTask(null);
     const { active, over } = event;
 
@@ -113,7 +123,7 @@ export function useTaskDragLogic() {
 
       socket.emit('taskMoved', movedTask);
     }
-  }, [moveTask]);
+  }, [hasMoveAccess, moveTask]);
 
   return {
     activeTask,

@@ -2,7 +2,14 @@ import { useEffect, useRef } from "react";
 import { useTaskStore } from "@/store/useTaskStore";
 import { socket } from "@/lib/socket";
 import { useNotificationStore } from "@/store/useNotificationStore";
-import { TASK_STATUS_LABELS, type Task, type TaskMovePayload } from "@/types";
+import { useCurrentUserStore } from "@/store/useCurrentUserStore";
+import {
+  TASK_STATUS_LABELS,
+  USER_ROLE_LABELS,
+  type Task,
+  type TaskMovePayload,
+  type User,
+} from "@/types";
 
 export function useTaskSocket() {
   const tasks = useTaskStore((state) => state.tasks);
@@ -12,6 +19,7 @@ export function useTaskSocket() {
   const moveTask = useTaskStore((state) => state.moveTask);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const addNotification = useNotificationStore((state) => state.addNotification);
+  const setCurrentUser = useCurrentUserStore((state) => state.setCurrentUser);
   const tasksRef = useRef(tasks);
   const hasConnectedRef = useRef(false);
   const hadUnexpectedDisconnectRef = useRef(false);
@@ -67,6 +75,15 @@ export function useTaskSocket() {
       setTasks(startupTasks);
     });
 
+    socket.on("currentUser", (user: User) => {
+      setCurrentUser(user);
+      addNotification({
+        title: "Role assigned",
+        message: `You are signed in as ${user.name} with ${USER_ROLE_LABELS[user.role]} access.`,
+        variant: "info",
+      });
+    });
+
     socket.on('taskAdded', (newTask: Task) => {
       addTask(newTask);
       addNotification({
@@ -101,15 +118,34 @@ export function useTaskSocket() {
       });
     });
 
+    socket.on("permissionDenied", (payload: { action: string; role: User["role"] }) => {
+      const actionLabel =
+        payload.action === "delete"
+          ? "delete tasks"
+          : payload.action === "move"
+            ? "move tasks"
+            : payload.action === "update"
+              ? "edit tasks"
+              : "create tasks";
+
+      addNotification({
+        title: "Permission denied",
+        message: `${USER_ROLE_LABELS[payload.role]} users cannot ${actionLabel}.`,
+        variant: "warning",
+      });
+    });
+
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off('initTasks');
+      socket.off("currentUser");
       socket.off('taskAdded');
       socket.off('taskUpdated');
       socket.off('taskMoved');
       socket.off('taskDeleted');
+      socket.off("permissionDenied");
       socket.disconnect();
     };
-  }, [setTasks, addTask, updateTask, moveTask, deleteTask, addNotification]);
+  }, [setTasks, addTask, updateTask, moveTask, deleteTask, addNotification, setCurrentUser]);
 }

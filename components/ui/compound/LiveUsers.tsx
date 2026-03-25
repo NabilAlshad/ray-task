@@ -1,36 +1,67 @@
 import { useEffect, useRef, useState } from "react";
 import { socket } from "@/lib/socket";
-import type { User } from "@/types";
+import { useCurrentUserStore } from "@/store/useCurrentUserStore";
+import { USER_ROLE_LABELS, type User } from "@/types";
 import { Users } from "lucide-react";
 
-const COLORS = [
-  "bg-red-500", "bg-blue-500", "bg-green-500", 
-  "bg-yellow-500", "bg-purple-500", "bg-pink-500", 
-  "bg-indigo-500", "bg-teal-500"
+const MOCK_USERS: Array<Omit<User, "id">> = [
+  { name: "Alice 12", color: "bg-red-500", role: "ADMIN" },
+  { name: "Bob 22", color: "bg-blue-500", role: "MEMBER" },
+  { name: "Charlie 45", color: "bg-green-500", role: "VIEWER" },
+  { name: "Diana 8", color: "bg-yellow-500", role: "ADMIN" },
+  { name: "Eve 99", color: "bg-purple-500", role: "MEMBER" },
+  { name: "Frank 11", color: "bg-pink-500", role: "VIEWER" },
+  { name: "Grace 33", color: "bg-indigo-500", role: "ADMIN" },
+  { name: "Heidi 77", color: "bg-teal-500", role: "MEMBER" },
+  { name: "Ivan 12", color: "bg-orange-500", role: "VIEWER" },
+  { name: "Judy 54", color: "bg-cyan-500", role: "MEMBER" },
 ];
 
-const NAMES = [
-  "Alice", "Bob", "Charlie", "Diana", "Eve", 
-  "Frank", "Grace", "Heidi", "Ivan", "Judy"
-];
+const ROLE_STYLES = {
+  ADMIN: "bg-red-100 text-red-700",
+  MEMBER: "bg-blue-100 text-blue-700",
+  VIEWER: "bg-slate-100 text-slate-700",
+} as const;
 
 function createRandomUser(): User {
-  const randomName =
-    NAMES[Math.floor(Math.random() * NAMES.length)] + " " + Math.floor(Math.random() * 100);
-  const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+  const randomUser = MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)];
 
-  return { id: "", name: randomName, color: randomColor };
+  return { id: "", ...randomUser };
+}
+
+function mergeUsers(users: User[]) {
+  return users.reduce<User[]>((acc, current) => {
+    const existingUserIndex = acc.findIndex((item) => item.id === current.id);
+    if (existingUserIndex === -1) {
+      return acc.concat([current]);
+    }
+
+    const nextUsers = [...acc];
+    nextUsers[existingUserIndex] = current;
+    return nextUsers;
+  }, []);
 }
 
 export function LiveUsers() {
-  const [currentUser, setCurrentUser] = useState<User>(createRandomUser);
-  const currentUserRef = useRef<User>(currentUser);
+  const currentUser = useCurrentUserStore((state) => state.currentUser);
+  const setCurrentUser = useCurrentUserStore((state) => state.setCurrentUser);
+  const currentUserRef = useRef<User>(currentUser ?? createRandomUser());
   const [activeUsers, setActiveUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    const me = currentUserRef.current;
+    if (!currentUser) {
+      const initialUser = createRandomUser();
+      currentUserRef.current = initialUser;
+      setCurrentUser(initialUser);
+      return;
+    }
 
-    socket.on('connect', () => {
+    currentUserRef.current = currentUser;
+  }, [currentUser, setCurrentUser]);
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      const me = currentUserRef.current;
       const nextUser = {
         ...me,
         id: socket.id || me.id || "local-" + Math.random().toString(36).substring(2, 7),
@@ -38,74 +69,104 @@ export function LiveUsers() {
 
       currentUserRef.current = nextUser;
       setCurrentUser(nextUser);
-
-      setActiveUsers((prev) =>
-        [...prev, nextUser].reduce((acc, current) => {
-          const existingUser = acc.find((item) => item.id === current.id);
-          return existingUser ? acc : acc.concat([current]);
-        }, [] as User[]),
-      );
+      setActiveUsers((prev) => mergeUsers([...prev, nextUser]));
 
       if (socket.recovered) {
         return;
       }
 
-      socket.emit('userJoined', nextUser);
+      socket.emit("userJoined", nextUser);
     });
 
-    socket.on('activeUsers', (users: User[]) => {
-      setActiveUsers((prev) =>
-        [...prev, ...users].reduce((acc, current) => {
-          const existingUser = acc.find((item) => item.id === current.id);
-          return existingUser ? acc : acc.concat([current]);
-        }, [] as User[]),
-      );
+    socket.on("currentUser", (user: User) => {
+      currentUserRef.current = user;
+      setCurrentUser(user);
+      setActiveUsers((prev) => mergeUsers([...prev.filter((item) => item.id !== ""), user]));
     });
 
-    socket.on('userJoined', (user: User) => {
-      setActiveUsers((prev) => {
-        if (prev.find(u => u.id === user.id)) return prev;
-        return [...prev, user];
-      });
+    socket.on("activeUsers", (users: User[]) => {
+      setActiveUsers((prev) => mergeUsers([...prev, ...users]));
     });
 
-    socket.on('userLeft', (userId: string) => {
-      setActiveUsers((prev) => prev.filter(u => u.id !== userId));
+    socket.on("userJoined", (user: User) => {
+      setActiveUsers((prev) => mergeUsers([...prev, user]));
+    });
+
+    socket.on("userLeft", (userId: string) => {
+      setActiveUsers((prev) => prev.filter((user) => user.id !== userId));
     });
 
     return () => {
-      socket.off('connect');
-      socket.off('activeUsers');
-      socket.off('userJoined');
-      socket.off('userLeft');
+      socket.off("connect");
+      socket.off("currentUser");
+      socket.off("activeUsers");
+      socket.off("userJoined");
+      socket.off("userLeft");
     };
-  }, []);
+  }, [setCurrentUser]);
+
+  const roleLabel = USER_ROLE_LABELS[currentUser?.role ?? "VIEWER"];
+  const accessSummary =
+    currentUser?.role === "ADMIN"
+      ? "Full access"
+      : currentUser?.role === "MEMBER"
+        ? "Can create, edit, and move"
+        : "Read-only";
 
   return (
-    <div className="flex items-center gap-3 bg-white px-4 py-2 border-b border-gray-200 shadow-sm w-full sticky top-0 z-10 h-14">
-      <div className="flex items-center gap-2 text-gray-500 font-medium text-sm mr-auto">
-        <Users className="w-4 h-4" />
-        <span>Live Collaboration</span>
-      </div>
-      
-      <div className="flex items-center">
-        {activeUsers.map((user, i) => (
-          <div 
-            key={user.id} 
-            title={`${user.name} ${user.id === currentUser.id ? '(You)' : ''}`}
-            className={`w-8 h-8 rounded-full border-2 border-white -ml-2 first:ml-0 flex items-center justify-center text-xs font-bold text-white uppercase shadow-sm ${user.color} cursor-help transition-transform hover:scale-110 hover:z-20 relative`}
-            style={{ zIndex: activeUsers.length - i }}
-          >
-            {user.name.charAt(0)}
+    <div className="sticky top-0 z-10 w-full border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="mr-auto flex items-center gap-2 text-sm font-medium text-gray-500">
+          <Users className="h-4 w-4" />
+          <span>Live Collaboration</span>
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          {activeUsers.map((user) => (
+            <div
+              key={user.id}
+              title={`${user.name} • ${USER_ROLE_LABELS[user.role]}${user.id === currentUser?.id ? " (You)" : ""}`}
+              className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1.5"
+            >
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold uppercase text-white shadow-sm ${user.color}`}
+              >
+                {user.name.charAt(0)}
+              </div>
+              <div className="hidden sm:block">
+                <div className="text-sm font-semibold leading-none text-gray-800">
+                  {user.name}
+                  {user.id === currentUser?.id ? " (You)" : ""}
+                </div>
+                <div className="mt-1">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ROLE_STYLES[user.role]}`}
+                  >
+                    {USER_ROLE_LABELS[user.role]}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+          {activeUsers.length === 0 ? (
+            <div className="text-sm text-gray-400">Connecting...</div>
+          ) : null}
+        </div>
+
+        <div className="hidden text-xs sm:flex sm:flex-col sm:items-end">
+          <div className="text-gray-500">
+            Logged in as{" "}
+            <span className="font-semibold text-gray-700">
+              {currentUser?.name ?? "Connecting..."}
+            </span>
           </div>
-        ))}
-        {activeUsers.length === 0 && (
-          <div className="text-sm text-gray-400">Connecting...</div>
-        )}
-      </div>
-      
-      <div className="text-xs text-gray-400 hidden sm:block">
-        Logged in as <span className="font-semibold text-gray-700">{currentUser.name}</span>
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full px-2 py-0.5 font-semibold ${ROLE_STYLES[currentUser?.role ?? "VIEWER"]}`}>
+              {roleLabel}
+            </span>
+            <span className="text-gray-400">{accessSummary}</span>
+          </div>
+        </div>
       </div>
     </div>
   );

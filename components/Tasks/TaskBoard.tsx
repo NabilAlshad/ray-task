@@ -14,7 +14,14 @@ import { TaskModal } from "./TaskModal";
 import { ConfirmationModal } from "@/components/Tasks/ConfirmationModal";
 import { NotificationCenter } from "@/components/ui/compound/NotificationCenter";
 import { useTaskStore } from "@/store/useTaskStore";
-import type { TaskColumnDefinition } from "@/types";
+import { useCurrentUserStore } from "@/store/useCurrentUserStore";
+import {
+  canCreateTask,
+  canDeleteTask,
+  canMoveTask,
+  canUpdateTask,
+  type TaskColumnDefinition,
+} from "@/types";
 import { Plus } from "lucide-react";
 import { useTaskSocket } from "@/lib/hooks/useTaskSocket";
 import { useTaskModalLogic } from "@/lib/hooks/useTaskModalLogic";
@@ -22,6 +29,7 @@ import { useTaskDragLogic } from "@/lib/hooks/useTaskDragLogic";
 
 export function TaskBoard() {
   const tasks = useTaskStore((state) => state.tasks);
+  const currentUser = useCurrentUserStore((state) => state.currentUser);
 
   useTaskSocket();
 
@@ -40,6 +48,12 @@ export function TaskBoard() {
 
   const { activeTask, handleDragStart, handleDragOver, handleDragEnd } =
     useTaskDragLogic();
+
+  const role = currentUser?.role ?? "VIEWER";
+  const canCreate = canCreateTask(role);
+  const canEdit = canUpdateTask(role);
+  const canDelete = canDeleteTask(role);
+  const canMove = canMoveTask(role);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -69,8 +83,15 @@ export function TaskBoard() {
             </p>
           </div>
           <button
+            type="button"
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5"
+            disabled={!canCreate}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
+            title={
+              canCreate
+                ? "Create a new task"
+                : "Your current role does not allow creating tasks"
+            }
           >
             <Plus className="w-5 h-5" />
             New Task
@@ -80,9 +101,9 @@ export function TaskBoard() {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
+          onDragStart={canMove ? handleDragStart : undefined}
+          onDragOver={canMove ? handleDragOver : undefined}
+          onDragEnd={canMove ? handleDragEnd : undefined}
         >
           <div className="flex flex-col md:flex-row gap-6 md:items-start select-none">
             {columns.map((col) => {
@@ -98,6 +119,9 @@ export function TaskBoard() {
                   tasks={columnTasks}
                   onEditTask={handleOpenEditModal}
                   onDeleteTask={handleRequestDeleteTask}
+                  canEditTask={canEdit}
+                  canDeleteTask={canDelete}
+                  canMoveTask={canMove}
                 />
               );
             })}
@@ -110,6 +134,9 @@ export function TaskBoard() {
                   task={activeTask}
                   onEdit={() => {}}
                   onDelete={() => {}}
+                  canEdit={false}
+                  canDelete={false}
+                  canDrag={canMove}
                 />
               </div>
             ) : null}

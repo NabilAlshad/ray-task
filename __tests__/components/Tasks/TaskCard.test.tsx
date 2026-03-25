@@ -34,7 +34,16 @@ describe("TaskCard", () => {
     const onEdit = jest.fn();
     const onDelete = jest.fn();
 
-    render(<TaskCard task={sampleTasks[0]} onEdit={onEdit} onDelete={onDelete} />);
+    render(
+      <TaskCard
+        task={sampleTasks[0]}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        canEdit
+        canDelete
+        canDrag
+      />,
+    );
 
     expect(screen.getByText("Write docs")).toBeInTheDocument();
     expect(screen.getByText("Document the board")).toBeInTheDocument();
@@ -52,9 +61,28 @@ describe("TaskCard", () => {
         task={{ ...sampleTasks[0], description: undefined }}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
+        canEdit
+        canDelete
+        canDrag
       />,
     );
 
     expect(screen.queryByText("Document the board")).not.toBeInTheDocument();
+  });
+
+  it("hides task action buttons when the role does not allow them", () => {
+    render(
+      <TaskCard
+        task={sampleTasks[0]}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+        canEdit={false}
+        canDelete={false}
+        canDrag={false}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Edit task Write docs" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete task Write docs" })).not.toBeInTheDocument();
   });
 });

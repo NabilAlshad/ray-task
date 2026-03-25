@@ -10,6 +10,9 @@ export const TaskCard = memo(function TaskCard({
   task,
   onEdit,
   onDelete,
+  canEdit,
+  canDelete,
+  canDrag,
 }: TaskCardProps) {
   const sortableData: TaskDragItemData = {
     type: "Task",
@@ -26,6 +29,7 @@ export const TaskCard = memo(function TaskCard({
   } = useSortable({
     id: task.id,
     data: sortableData,
+    disabled: !canDrag,
   });
 
   const style = {
@@ -40,6 +44,7 @@ export const TaskCard = memo(function TaskCard({
       className={cn(
         "bg-white group relative rounded-xl shadow-sm border border-gray-200 p-4 mb-3 flex flex-col gap-2 hover:shadow-md transition-shadow cursor-grab",
         isDragging && "opacity-50 border-blue-500 shadow-lg",
+        !canDrag && "cursor-default",
       )}
       {...attributes}
       {...listeners}
@@ -49,30 +54,34 @@ export const TaskCard = memo(function TaskCard({
           {task.title}
         </h4>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(task);
-            }}
-            className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600 transition-colors"
-            aria-label={`Edit task ${task.title}`}
-            title={`Edit task ${task.title}`}
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(task);
-            }}
-            className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600 transition-colors"
-            aria-label={`Delete task ${task.title}`}
-            title={`Delete task ${task.title}`}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {canEdit ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(task);
+              }}
+              className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600 transition-colors"
+              aria-label={`Edit task ${task.title}`}
+              title={`Edit task ${task.title}`}
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          ) : null}
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(task);
+              }}
+              className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600 transition-colors"
+              aria-label={`Delete task ${task.title}`}
+              title={`Delete task ${task.title}`}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          ) : null}
         </div>
       </div>
 

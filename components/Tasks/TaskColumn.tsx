@@ -24,7 +24,16 @@ const COLUMN_STYLES = {
   },
 } as const;
 
-export const TaskColumn = memo(function TaskColumn({ status, tasks, title, onEditTask, onDeleteTask }: TaskColumnProps) {
+export const TaskColumn = memo(function TaskColumn({
+  status,
+  tasks,
+  title,
+  onEditTask,
+  onDeleteTask,
+  canEditTask,
+  canDeleteTask,
+  canMoveTask,
+}: TaskColumnProps) {
   const droppableData: TaskColumnDragData = {
     type: "Column",
     status,
@@ -62,7 +71,10 @@ export const TaskColumn = memo(function TaskColumn({ status, tasks, title, onEdi
               key={task.id} 
               task={task} 
               onEdit={onEditTask} 
-              onDelete={onDeleteTask} 
+              onDelete={onDeleteTask}
+              canEdit={canEditTask}
+              canDelete={canDeleteTask}
+              canDrag={canMoveTask}
             />
           ))}
         </SortableContext>

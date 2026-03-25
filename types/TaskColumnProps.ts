@@ -6,4 +6,7 @@ export type TaskColumnProps = {
   tasks: Task[];
   onEditTask: (task: Task) => void;
   onDeleteTask: (task: Task) => void;
+  canEditTask: boolean;
+  canDeleteTask: boolean;
+  canMoveTask: boolean;
 };

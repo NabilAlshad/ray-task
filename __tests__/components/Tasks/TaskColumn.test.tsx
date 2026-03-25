@@ -40,6 +40,9 @@ describe("TaskColumn", () => {
         tasks={[sampleTasks[0]]}
         onEditTask={jest.fn()}
         onDeleteTask={jest.fn()}
+        canEditTask
+        canDeleteTask
+        canMoveTask
       />,
     );
 
@@ -61,6 +64,9 @@ describe("TaskColumn", () => {
         tasks={[sampleTasks[0]]}
         onEditTask={jest.fn()}
         onDeleteTask={jest.fn()}
+        canEditTask
+        canDeleteTask
+        canMoveTask
       />,
     );
 
@@ -75,6 +81,9 @@ describe("TaskColumn", () => {
         tasks={[]}
         onEditTask={jest.fn()}
         onDeleteTask={jest.fn()}
+        canEditTask={false}
+        canDeleteTask={false}
+        canMoveTask={false}
       />,
     );
 
