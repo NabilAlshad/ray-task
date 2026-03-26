@@ -42,27 +42,83 @@ This app uses a custom Node server instead of running plain `next dev` or `next 
 ```text
 .
 ├── app/                    # Next.js App Router entrypoints and global styles
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
 ├── components/             # Board UI, modals, notifications, live user UI
-│   ├── live-users/         # User management components
-│   └── Tasks/              # Task board components
+│   ├── live-users/
+│   │   ├── CreateUserModal.tsx
+│   │   ├── LiveUsers.tsx
+│   │   ├── SwitchUserModal.tsx
+│   │   ├── storage.ts
+│   ├── Tasks/
+│   │   ├── AddTaskForm.tsx
+│   │   ├── ConfirmationModal.tsx
+│   │   ├── constants.ts
+│   │   ├── TaskBoard.tsx
+│   │   ├── TaskColumn.tsx
+│   │   ├── TaskDetailsModal.tsx
+│   │   ├── TaskModal.tsx
+│   └── ui/
+│       ├── atomic/
+│       │   ├── Button.tsx
+│       │   ├── Input.tsx
+│       │   └── Textarea.tsx
+│       ├── compound/
+│       │   ├── TaskCard.tsx
+│       │   └── Modal.tsx
+│       └── template/
+│           ├── Modal.tsx
+│           └── NotificationCenter.tsx
 ├── lib/
-│   ├── hooks/              # Socket, drag/drop, and modal behavior
-│   │   ├── live-users/     # Live user hooks
-│   │   └── tasks/          # Task-related hooks
+│   ├── hooks/
+│   │   ├── live-users/
+│   │   │   └── useLiveUsers.ts
+│   │   ├── tasks/
+│   │   │   ├── useTaskDragLogic.ts
+│   │   │   ├── useTaskModalLogic.ts
+│   │   │   └── useTaskSocket.ts
 │   ├── socket.ts           # Socket.IO client singleton
-│   └── utils/              # Shared helpers/constants
+│   └── utils/
+│       ├── ClientWrapper.tsx
+│       ├── constants.ts
+│       ├── helpers.ts
+│       ├── lazy.tsx
+│       └── taskState.ts
 ├── store/                  # Zustand stores for tasks, user, notifications
+│   ├── useCurrentUserStore.ts
+│   ├── useNotificationStore.ts
+│   └── useTaskStore.ts
 ├── types/                  # Shared TypeScript types
+│   ├── AddTaskFormProps.ts
+│   ├── LiveUsers.ts
+│   ├── Notification.ts
+│   ├── Task.ts
+│   ├── TaskCardProps.ts
+│   ├── TaskColumnProps.ts
+│   ├── TaskModalProps.ts
+│   ├── TaskStore.ts
+│   └── User.ts
 ├── data/                   # Local JSON persistence
+│   ├── constants.ts
+│   ├── tasks.json
+│   └── tasks.ts
 ├── server/                 # Server-side logic
-│   ├── server.js           # Custom Node + Next + Socket.IO server
-│   ├── socketHandlers.js   # Socket event handlers
-│   ├── tasksStore.js       # Task persistence logic
-│   └── usersDirectoryStore.js # User directory management
+│   ├── server.js
+│   ├── socketHandlers.js
+│   ├── tasksStore.js
+│   └── usersDirectoryStore.js
 ├── public/                 # Static assets
 ├── test-utils/             # Test utilities
+│   └── sampleTasks.ts
 ├── __tests__/              # Component and app tests
-└── tsconfig.json, jest.config.ts, etc. # Config files
+├── .env.production
+├── jest.config.ts
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── tailwind config as needed
+└── tsconfig.json
 ```
 
 Architecture summary:

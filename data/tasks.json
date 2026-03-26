@@ -1,33 +1,5 @@
 [
   {
-    "id": "5",
-    "title": "Deploy to production",
-    "description": "Set up hosting and domains",
-    "status": "IN_PROGRESS",
-    "order": 0
-  },
-  {
-    "id": "bcef5c93-a648-445d-a225-4c5ae7db3cff",
-    "title": "Learn Pyhton",
-    "description": "",
-    "status": "IN_PROGRESS",
-    "order": 1
-  },
-  {
-    "id": "2",
-    "title": "Build the TaskCard component",
-    "description": "Implement drag and drop ",
-    "status": "IN_PROGRESS",
-    "order": 3
-  },
-  {
-    "id": "6",
-    "title": "Set up CI/CD pipeline",
-    "description": "Automate testing and ",
-    "status": "DONE",
-    "order": 0
-  },
-  {
     "id": "1",
     "title": "Design the homepage layout",
     "description": "Create wireframes and mockups",
@@ -35,17 +7,52 @@
     "order": 0
   },
   {
-    "id": "3",
-    "title": "Integrate API endpoints",
-    "description": "Connect frontend to backend",
-    "status": "TODO",
+    "id": "bcef5c93-a648-445d-a225-4c5ae7db3cff",
+    "title": "Learn Python",
+    "description": "",
+    "status": "DONE",
+    "order": 0
+  },
+  {
+    "id": "6",
+    "title": "Set up CI/CD pipeline",
+    "description": "Automate testing and ",
+    "status": "DONE",
     "order": 1
   },
   {
-    "id": "d7931be1-92b8-4e00-b302-2caa9a8d1bf4",
-    "title": "Learn js",
-    "description": "Learn Js deeply\n",
-    "status": "TODO",
+    "id": "45f87bde-ded5-4fe7-8772-69a98ce3ada4",
+    "title": "LEAARN c",
+    "description": "",
+    "status": "DONE",
+    "order": 3
+  },
+  {
+    "id": "5",
+    "title": "Deploy to production",
+    "description": "Set up hosting and domains",
+    "status": "IN_PROGRESS",
+    "order": 0
+  },
+  {
+    "id": "58e209aa-7f3b-4c8d-a6ca-22f07e024652",
+    "title": "LEAARN JS",
+    "description": "LEARN JS ",
+    "status": "IN_PROGRESS",
+    "order": 1
+  },
+  {
+    "id": "3",
+    "title": "Integrate API endpoints",
+    "description": "Connect frontend to ",
+    "status": "IN_PROGRESS",
     "order": 2
+  },
+  {
+    "id": "2",
+    "title": "Build the TaskCard component",
+    "description": "Implement drag and drop functionality",
+    "status": "IN_PROGRESS",
+    "order": 3
   }
 ]
