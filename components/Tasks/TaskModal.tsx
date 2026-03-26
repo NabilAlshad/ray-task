@@ -29,6 +29,13 @@ export function TaskModal({
     onClose();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as any);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -66,6 +73,7 @@ export function TaskModal({
             id={descriptionInputId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={handleKeyDown}
             aria-label="Description (optional)"
             placeholder="Add more details..."
             rows={4}

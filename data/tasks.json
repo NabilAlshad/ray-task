@@ -16,9 +16,16 @@
   {
     "id": "2",
     "title": "Build the TaskCard component",
-    "description": "Implement drag and drop functionality",
+    "description": "Implement drag and drop ",
     "status": "IN_PROGRESS",
     "order": 3
+  },
+  {
+    "id": "6",
+    "title": "Set up CI/CD pipeline",
+    "description": "Automate testing and ",
+    "status": "DONE",
+    "order": 0
   },
   {
     "id": "1",
@@ -28,17 +35,17 @@
     "order": 0
   },
   {
-    "id": "6",
-    "title": "Set up CI/CD pipeline",
-    "description": "Automate testing and deployment",
+    "id": "3",
+    "title": "Integrate API endpoints",
+    "description": "Connect frontend to backend",
     "status": "TODO",
     "order": 1
   },
   {
-    "id": "3",
-    "title": "Integrate API endpoints",
-    "description": "Connect frontend to backend",
-    "status": "DONE",
-    "order": 0
+    "id": "d7931be1-92b8-4e00-b302-2caa9a8d1bf4",
+    "title": "Learn js",
+    "description": "Learn Js deeply\n",
+    "status": "TODO",
+    "order": 2
   }
 ]
