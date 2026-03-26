@@ -107,11 +107,29 @@ export function useTaskModalLogic({
 
   const handleSubmitModal = useCallback(
     (data: TaskDraft) => {
+      const normalizeTitleForComparison = (title: string) =>
+        title.trim().toLowerCase().replace(/\s+/g, " ");
+
       if (taskToEdit) {
         if (!canUpdateTask(role)) {
           addNotification({
             title: "Update blocked",
             message: "Your current rsole does not allow editing tasks.",
+            variant: "warning",
+          });
+          return;
+        }
+        const newTitleNormalized = normalizeTitleForComparison(data.title);
+        const duplicateTask = tasks.find(
+          (task) =>
+            task.id !== taskToEdit.id &&
+            normalizeTitleForComparison(task.title) === newTitleNormalized,
+        );
+
+        if (duplicateTask) {
+          addNotification({
+            title: "Duplicate title",
+            message: `A task with the title "${data.title}" already exists.`,
             variant: "warning",
           });
           return;
@@ -136,9 +154,6 @@ export function useTaskModalLogic({
           });
           return;
         }
-        const normalizeTitleForComparison = (title: string) =>
-          title.trim().toLowerCase().replace(/\s+/g, " ");
-
         const newTitleNormalized = normalizeTitleForComparison(data.title);
         const duplicateTask = tasks.find(
           (task) =>
