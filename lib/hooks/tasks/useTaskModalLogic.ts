@@ -136,6 +136,23 @@ export function useTaskModalLogic({
           });
           return;
         }
+        const normalizeTitleForComparison = (title: string) =>
+          title.trim().toLowerCase().replace(/\s+/g, " ");
+
+        const newTitleNormalized = normalizeTitleForComparison(data.title);
+        const duplicateTask = tasks.find(
+          (task) =>
+            normalizeTitleForComparison(task.title) === newTitleNormalized,
+        );
+
+        if (duplicateTask) {
+          addNotification({
+            title: "Duplicate title",
+            message: `A task with the title "${data.title}" already exists.`,
+            variant: "warning",
+          });
+          return;
+        }
         const existingIds = new Set(tasks.map((task) => task.id));
         const newTask: Task = {
           id: generateUniqueTaskId(existingIds),

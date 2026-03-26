@@ -7,13 +7,6 @@
     "order": 0
   },
   {
-    "id": "10060e6a-9124-4c77-a3ce-ad2f5f06adcf",
-    "title": "LEAARN JS",
-    "description": "",
-    "status": "TODO",
-    "order": 1
-  },
-  {
     "id": "5",
     "title": "Deploy to production",
     "description": "Set up hosting and domains",
@@ -40,20 +33,6 @@
     "description": "",
     "status": "DONE",
     "order": 0
-  },
-  {
-    "id": "385f8f76-6b95-456e-bdfa-fb2041c82b65",
-    "title": "LEAARN ",
-    "description": "",
-    "status": "DONE",
-    "order": 1
-  },
-  {
-    "id": "58e209aa-7f3b-4c8d-a6ca-22f07e024652",
-    "title": "LEAARN JS",
-    "description": "LEARN ",
-    "status": "DONE",
-    "order": 2
   },
   {
     "id": "6",
