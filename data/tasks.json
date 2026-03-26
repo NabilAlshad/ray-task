@@ -1,10 +1,17 @@
 [
   {
-    "id": "1",
-    "title": "Design the homepage layout",
-    "description": "Create wireframes and mockups",
-    "status": "TODO",
+    "id": "5",
+    "title": "Deploy to production",
+    "description": "Set up hosting and domains",
+    "status": "IN_PROGRESS",
     "order": 0
+  },
+  {
+    "id": "2",
+    "title": "Build the TaskCard component",
+    "description": "Implement drag and drop functionality",
+    "status": "IN_PROGRESS",
+    "order": 3
   },
   {
     "id": "bcef5c93-a648-445d-a225-4c5ae7db3cff",
@@ -14,45 +21,31 @@
     "order": 0
   },
   {
+    "id": "58e209aa-7f3b-4c8d-a6ca-22f07e024652",
+    "title": "LEAARN JS",
+    "description": "LEARN ",
+    "status": "DONE",
+    "order": 1
+  },
+  {
     "id": "6",
     "title": "Set up CI/CD pipeline",
     "description": "Automate testing and ",
     "status": "DONE",
-    "order": 1
+    "order": 2
   },
   {
-    "id": "45f87bde-ded5-4fe7-8772-69a98ce3ada4",
-    "title": "LEAARN c",
-    "description": "",
-    "status": "DONE",
-    "order": 3
-  },
-  {
-    "id": "5",
-    "title": "Deploy to production",
-    "description": "Set up hosting and domains",
-    "status": "IN_PROGRESS",
+    "id": "1",
+    "title": "Design the homepage layout",
+    "description": "Create wireframes and mockups",
+    "status": "TODO",
     "order": 0
-  },
-  {
-    "id": "58e209aa-7f3b-4c8d-a6ca-22f07e024652",
-    "title": "LEAARN JS",
-    "description": "LEARN JS ",
-    "status": "IN_PROGRESS",
-    "order": 1
   },
   {
     "id": "3",
     "title": "Integrate API endpoints",
     "description": "Connect frontend to ",
-    "status": "IN_PROGRESS",
-    "order": 2
-  },
-  {
-    "id": "2",
-    "title": "Build the TaskCard component",
-    "description": "Implement drag and drop functionality",
-    "status": "IN_PROGRESS",
-    "order": 3
+    "status": "TODO",
+    "order": 1
   }
 ]
