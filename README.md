@@ -1,4 +1,4 @@
-# Real-Time Kanban Task Board
+# Real-Time Task Board
 
 ## Installation
 
