@@ -1,17 +1,10 @@
 [
   {
-    "id": "5",
-    "title": "Deploy to production",
-    "description": "Set up hosting and domains",
-    "status": "IN_PROGRESS",
+    "id": "1",
+    "title": "Design the homepage layout",
+    "description": "Create wireframes and mockups",
+    "status": "TODO",
     "order": 0
-  },
-  {
-    "id": "2",
-    "title": "Build the TaskCard component",
-    "description": "Implement drag and drop functionality",
-    "status": "IN_PROGRESS",
-    "order": 3
   },
   {
     "id": "bcef5c93-a648-445d-a225-4c5ae7db3cff",
@@ -32,20 +25,27 @@
     "title": "Set up CI/CD pipeline",
     "description": "Automate testing and ",
     "status": "DONE",
-    "order": 2
+    "order": 3
   },
   {
-    "id": "1",
-    "title": "Design the homepage layout",
-    "description": "Create wireframes and mockups",
-    "status": "TODO",
+    "id": "5",
+    "title": "Deploy to production",
+    "description": "Set up hosting and domains",
+    "status": "IN_PROGRESS",
     "order": 0
+  },
+  {
+    "id": "2",
+    "title": "Build the TaskCard component",
+    "description": "Implement drag and drop functionality",
+    "status": "IN_PROGRESS",
+    "order": 1
   },
   {
     "id": "3",
     "title": "Integrate API endpoints",
-    "description": "Connect frontend to ",
-    "status": "TODO",
-    "order": 1
+    "description": "Connect frontend to api",
+    "status": "IN_PROGRESS",
+    "order": 2
   }
 ]
