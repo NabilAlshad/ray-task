@@ -7,32 +7,46 @@
     "order": 0
   },
   {
-    "id": "xjkuiag",
-    "title": "make bun",
-    "description": "",
-    "status": "TODO",
-    "order": 1
-  },
-  {
     "id": "2",
     "title": "Build the TaskCard component",
     "description": "Implement drag and drop functionality",
     "status": "TODO",
-    "order": 2
+    "order": 1
   },
   {
     "id": "3",
     "title": "Integrate API endpoints",
     "description": "Connect frontend to backend",
-    "status": "DONE",
-    "order": 0
+    "status": "TODO",
+    "order": 2
+  },
+  {
+    "id": "8d2bf19f-2fa5-4129-9895-eccbee7a3c20",
+    "title": "learn c",
+    "description": "",
+    "status": "TODO",
+    "order": 3
   },
   {
     "id": "6",
     "title": "Set up CI/CD pipeline",
     "description": "Automate testing and deployment",
     "status": "DONE",
-    "order": 2
+    "order": 0
+  },
+  {
+    "id": "xjkuiag",
+    "title": "make bun",
+    "description": "",
+    "status": "DONE",
+    "order": 1
+  },
+  {
+    "id": "e07b87a3-0677-4af4-b246-87cb1abc6842",
+    "title": "learn dot",
+    "description": "",
+    "status": "DONE",
+    "order": 3
   },
   {
     "id": "5",
@@ -40,5 +54,19 @@
     "description": "Set up hosting and domains",
     "status": "IN_PROGRESS",
     "order": 0
+  },
+  {
+    "id": "bcef5c93-a648-445d-a225-4c5ae7db3cff",
+    "title": "Learn Pyhton",
+    "description": "",
+    "status": "IN_PROGRESS",
+    "order": 1
+  },
+  {
+    "id": "m3t5c6p",
+    "title": "learn js",
+    "description": "fgs",
+    "status": "IN_PROGRESS",
+    "order": 2
   }
 ]

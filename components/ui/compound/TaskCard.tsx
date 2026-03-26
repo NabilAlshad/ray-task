@@ -1,8 +1,9 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { TaskCardProps, TaskDragItemData } from "@/types";
-import { cn } from "@/lib/utils/helpers";
+import { cn, truncateWords } from "@/lib/utils/helpers";
 import { Edit2, Trash2 } from "lucide-react";
+import { TASK_CARD_DESCRIPTION_WORD_LIMIT } from "@/components/Tasks/constants";
 
 import { memo } from "react";
 
@@ -15,6 +16,10 @@ export const TaskCard = memo(function TaskCard({
   canDelete,
   canDrag,
 }: TaskCardProps) {
+  const descriptionPreview = task.description?.trim()
+    ? truncateWords(task.description, TASK_CARD_DESCRIPTION_WORD_LIMIT)
+    : null;
+
   const sortableData: TaskDragItemData = {
     type: "Task",
     task,
@@ -51,16 +56,9 @@ export const TaskCard = memo(function TaskCard({
       {...listeners}
     >
       <div className="flex justify-between items-start gap-2">
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={() => onView(task)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              onView(task);
-            }
-          }}
           className="min-w-0 flex-1 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           aria-label={`View task ${task.title}`}
         >
@@ -68,10 +66,12 @@ export const TaskCard = memo(function TaskCard({
             {task.title}
           </h4>
 
-          {task.description && (
-            <p className="mt-2 text-sm text-gray-500 line-clamp-3">{task.description}</p>
+          {descriptionPreview && (
+            <p className="mt-2 text-sm text-gray-500 line-clamp-3">
+              {descriptionPreview}
+            </p>
           )}
-        </div>
+        </button>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {canEdit ? (

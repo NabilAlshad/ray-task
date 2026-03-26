@@ -1,5 +1,6 @@
 export * from "./Task";
 export * from "./User";
+export * from "./LiveUsers";
 export * from "./Notification";
 export * from "./TaskCardProps";
 export * from "./TaskColumnProps";

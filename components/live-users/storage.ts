@@ -4,13 +4,15 @@ import {
   INITIAL_DIRECTORY_USERS,
   USER_STORAGE_KEY,
   type UserColorOption,
-} from "./constants";
+} from "@/data/constants";
 
 export function createRandomUser(
   directoryUsers: UserDirectoryEntry[] = INITIAL_DIRECTORY_USERS,
 ): User {
-  const sourceUsers = directoryUsers.length > 0 ? directoryUsers : INITIAL_DIRECTORY_USERS;
-  const randomUser = sourceUsers[Math.floor(Math.random() * sourceUsers.length)];
+  const sourceUsers =
+    directoryUsers.length > 0 ? directoryUsers : INITIAL_DIRECTORY_USERS;
+  const randomUser =
+    sourceUsers[Math.floor(Math.random() * sourceUsers.length)];
 
   return {
     id: "",

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NotificationCenter } from "@/components/ui/compound/NotificationCenter";
+import { NotificationCenter } from "@/components/ui/template/NotificationCenter";
 import { useNotificationStore } from "@/store/useNotificationStore";
 
 describe("NotificationCenter", () => {
@@ -27,7 +27,9 @@ describe("NotificationCenter", () => {
     expect(screen.getByText("Task created")).toBeInTheDocument();
     expect(screen.getByText("A new task is ready.")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Dismiss notification" }));
+    await user.click(
+      screen.getByRole("button", { name: "Dismiss notification" }),
+    );
 
     expect(screen.queryByText("Task created")).not.toBeInTheDocument();
   });
@@ -35,6 +37,8 @@ describe("NotificationCenter", () => {
   it("renders nothing actionable when there are no notifications", () => {
     render(<NotificationCenter />);
 
-    expect(screen.queryByRole("button", { name: "Dismiss notification" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Dismiss notification" }),
+    ).not.toBeInTheDocument();
   });
 });

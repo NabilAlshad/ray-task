@@ -3,9 +3,14 @@ import type { TaskModalProps } from "@/types";
 import { Input } from "@/components/ui/atomic/Input";
 import { Textarea } from "@/components/ui/atomic/Textarea";
 import { Button } from "@/components/ui/atomic/Button";
-import { Modal } from "@/components/ui/compound/Modal";
+import { Modal } from "@/components/ui/template/Modal";
 
-export function TaskModal({ isOpen, onClose, onSubmit, taskToEdit }: TaskModalProps) {
+export function TaskModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  taskToEdit,
+}: TaskModalProps) {
   const [title, setTitle] = useState(taskToEdit?.title ?? "");
   const [description, setDescription] = useState(taskToEdit?.description ?? "");
   const titleInputId = "task-title";
@@ -32,7 +37,10 @@ export function TaskModal({ isOpen, onClose, onSubmit, taskToEdit }: TaskModalPr
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label htmlFor={titleInputId} className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor={titleInputId}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Title
           </label>
           <Input
@@ -40,6 +48,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, taskToEdit }: TaskModalPr
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            aria-label="Title"
             placeholder="e.g., Update documentation"
             autoFocus
             required
@@ -57,6 +66,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, taskToEdit }: TaskModalPr
             id={descriptionInputId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            aria-label="Description (optional)"
             placeholder="Add more details..."
             rows={4}
           />
@@ -67,12 +77,14 @@ export function TaskModal({ isOpen, onClose, onSubmit, taskToEdit }: TaskModalPr
             type="button"
             variant="secondary"
             onClick={onClose}
+            aria-label="Cancel"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={!title.trim()}
+            aria-label={taskToEdit ? "Save Changes" : "Create Task"}
           >
             {taskToEdit ? "Save Changes" : "Create Task"}
           </Button>

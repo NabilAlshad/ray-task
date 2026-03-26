@@ -1,4 +1,4 @@
-import { Modal } from "../ui/compound/Modal";
+import { Modal } from "../ui/template/Modal";
 import { Button } from "@/components/ui/atomic/Button";
 
 type ConfirmationModalProps = {
@@ -28,13 +28,19 @@ export function ConfirmationModal({
         <p className="text-sm leading-6 text-gray-600">{description}</p>
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            aria-label={cancelLabel}
+          >
             {cancelLabel}
           </Button>
           <Button
             type="button"
             variant={isDanger ? "danger" : "primary"}
             onClick={onConfirm}
+            aria-label={confirmLabel}
           >
             {confirmLabel}
           </Button>

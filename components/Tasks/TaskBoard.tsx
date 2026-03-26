@@ -10,11 +10,12 @@ import {
 import { useOptimistic } from "react";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { TaskColumn } from "./TaskColumn";
-import { TaskCard } from "./TaskCard";
+import { TaskCard } from "@/components/ui/compound/TaskCard";
 import { TaskDetailsModal } from "./TaskDetailsModal";
 import { TaskModal } from "./TaskModal";
+import { TASK_BOARD_COLUMNS } from "./constants";
 import { ConfirmationModal } from "@/components/Tasks/ConfirmationModal";
-import { NotificationCenter } from "@/components/ui/compound/NotificationCenter";
+import { NotificationCenter } from "@/components/ui/template/NotificationCenter";
 import { applyTaskOptimisticAction } from "@/lib/utils/taskState";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useCurrentUserStore } from "@/store/useCurrentUserStore";
@@ -23,17 +24,19 @@ import {
   canDeleteTask,
   canMoveTask,
   canUpdateTask,
-  type TaskColumnDefinition,
 } from "@/types";
 import { Plus } from "lucide-react";
-import { useTaskSocket } from "@/lib/hooks/useTaskSocket";
-import { useTaskModalLogic } from "@/lib/hooks/useTaskModalLogic";
-import { useTaskDragLogic } from "@/lib/hooks/useTaskDragLogic";
+import { useTaskSocket } from "@/lib/hooks/tasks/useTaskSocket";
+import { useTaskModalLogic } from "@/lib/hooks/tasks/useTaskModalLogic";
+import { useTaskDragLogic } from "@/lib/hooks/tasks/useTaskDragLogic";
 
 export function TaskBoard() {
   const tasks = useTaskStore((state) => state.tasks);
   const currentUser = useCurrentUserStore((state) => state.currentUser);
-  const [optimisticTasks, addOptimisticTask] = useOptimistic(tasks, applyTaskOptimisticAction);
+  const [optimisticTasks, addOptimisticTask] = useOptimistic(
+    tasks,
+    applyTaskOptimisticAction,
+  );
 
   useTaskSocket();
 
@@ -57,11 +60,16 @@ export function TaskBoard() {
     addOptimisticTask,
   });
 
-  const { activeTask, previewTasks, handleDragStart, handleDragOver, handleDragEnd } =
-    useTaskDragLogic({
-      tasks: optimisticTasks,
-      addOptimisticTask,
-    });
+  const {
+    activeTask,
+    previewTasks,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useTaskDragLogic({
+    tasks: optimisticTasks,
+    addOptimisticTask,
+  });
 
   const displayedTasks = previewTasks ?? optimisticTasks;
 
@@ -77,12 +85,6 @@ export function TaskBoard() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  const columns: TaskColumnDefinition[] = [
-    { id: "TODO", title: "To Do" },
-    { id: "IN_PROGRESS", title: "In Progress" },
-    { id: "DONE", title: "Done" },
-  ];
 
   return (
     <div className="flex justify-center w-full px-4 overflow-x-auto pb-10">
@@ -102,6 +104,8 @@ export function TaskBoard() {
             type="button"
             onClick={handleOpenAddModal}
             disabled={!canCreate}
+            aria-label="New Task"
+            aria-haspopup="dialog"
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
             title={
               canCreate
@@ -122,7 +126,7 @@ export function TaskBoard() {
           onDragEnd={canMove ? handleDragEnd : undefined}
         >
           <div className="flex flex-col md:flex-row gap-6 md:items-start select-none">
-            {columns.map((col) => {
+            {TASK_BOARD_COLUMNS.map((col) => {
               const columnTasks = displayedTasks
                 .filter((t) => t.status === col.id)
                 .sort((a, b) => a.order - b.order);

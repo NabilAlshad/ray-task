@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useId } from "react";
 import { X } from "lucide-react";
 
 type ModalProps = {
@@ -9,11 +9,18 @@ type ModalProps = {
 };
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const titleId = useId();
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100vh-2rem)]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100vh-2rem)]"
+      >
         <button
           type="button"
           onClick={onClose}
@@ -24,7 +31,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-xl font-bold mb-6 text-gray-800">
+        <h2 id={titleId} className="text-xl font-bold mb-6 text-gray-800">
           {title}
         </h2>
 

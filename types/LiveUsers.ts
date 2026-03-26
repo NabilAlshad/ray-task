@@ -1,0 +1,29 @@
+import { type Dispatch, type SetStateAction, type FormEvent } from "react";
+import { type User, type UserDirectoryEntry } from "./User";
+import { type UserColorOption } from "@/data/constants";
+
+export type LiveUsersHookResult = {
+  currentUser: User | null | undefined;
+  directoryUsers: UserDirectoryEntry[];
+  activeUsers: User[];
+  isSwitchUserOpen: boolean;
+  isCreateUserOpen: boolean;
+  draftName: string;
+  draftColor: UserColorOption;
+  draftRole: UserDirectoryEntry["role"];
+  roleLabel: string;
+  accessSummary: string;
+  canManageSavedUsers: boolean;
+  nameInputId: string;
+  roleSelectId: string;
+  setIsSwitchUserOpen: Dispatch<SetStateAction<boolean>>;
+  setIsCreateUserOpen: Dispatch<SetStateAction<boolean>>;
+  setDraftName: Dispatch<SetStateAction<string>>;
+  setDraftColor: Dispatch<SetStateAction<UserColorOption>>;
+  setDraftRole: Dispatch<SetStateAction<UserDirectoryEntry["role"]>>;
+  handleOpenSwitchUser: () => void;
+  handleOpenCreateUser: () => void;
+  handleSubmitSwitchUser: (event: FormEvent) => void;
+  handleSelectPresetUser: (presetUser: UserDirectoryEntry) => void;
+  handleDeletePresetUser: (userId: string) => void;
+};

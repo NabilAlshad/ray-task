@@ -18,7 +18,9 @@ export function useTaskSocket() {
   const updateTask = useTaskStore((state) => state.updateTask);
   const moveTask = useTaskStore((state) => state.moveTask);
   const deleteTask = useTaskStore((state) => state.deleteTask);
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification,
+  );
   const setCurrentUser = useCurrentUserStore((state) => state.setCurrentUser);
   const tasksRef = useRef(tasks);
   const hasConnectedRef = useRef(false);
@@ -44,13 +46,15 @@ export function useTaskSocket() {
       if (socket.recovered) {
         addNotification({
           title: "Connection restored",
-          message: "Your session was recovered and missed updates were restored.",
+          message:
+            "Your session was recovered and missed updates were restored.",
           variant: "info",
         });
       } else {
         addNotification({
           title: "Reconnected",
-          message: "The board reconnected and synced with the latest server state.",
+          message:
+            "The board reconnected and synced with the latest server state.",
           variant: "info",
         });
       }
@@ -66,25 +70,26 @@ export function useTaskSocket() {
       hadUnexpectedDisconnectRef.current = true;
       addNotification({
         title: "Connection lost",
-        message: "Trying to restore your session after an unexpected disconnect.",
+        message:
+          "Trying to restore your session after an unexpected disconnect.",
         variant: "warning",
       });
     });
 
-    socket.on('initTasks', (startupTasks: Task[]) => {
+    socket.on("initTasks", (startupTasks: Task[]) => {
       setTasks(startupTasks);
     });
 
     socket.on("currentUser", (user: User) => {
       setCurrentUser(user);
       addNotification({
-        title: "Role assigned",
+        title: "Welcome back!",
         message: `You are signed in as ${user.name} with ${USER_ROLE_LABELS[user.role]} access.`,
         variant: "info",
       });
     });
 
-    socket.on('taskAdded', (newTask: Task) => {
+    socket.on("taskAdded", (newTask: Task) => {
       addTask(newTask);
       addNotification({
         title: "New task added",
@@ -93,7 +98,7 @@ export function useTaskSocket() {
       });
     });
 
-    socket.on('taskUpdated', (updatedTask: Task) => {
+    socket.on("taskUpdated", (updatedTask: Task) => {
       updateTask(updatedTask.id, updatedTask);
       addNotification({
         title: "Task updated",
@@ -102,11 +107,11 @@ export function useTaskSocket() {
       });
     });
 
-    socket.on('taskMoved', (data: TaskMovePayload) => {
+    socket.on("taskMoved", (data: TaskMovePayload) => {
       moveTask(data.id, data.status, data.order);
     });
 
-    socket.on('taskDeleted', (id: string) => {
+    socket.on("taskDeleted", (id: string) => {
       const deletedTask = tasksRef.current.find((task) => task.id === id);
       deleteTask(id);
       addNotification({
@@ -118,34 +123,45 @@ export function useTaskSocket() {
       });
     });
 
-    socket.on("permissionDenied", (payload: { action: string; role: User["role"] }) => {
-      const actionLabel =
-        payload.action === "delete"
-          ? "delete tasks"
-          : payload.action === "move"
-            ? "move tasks"
-            : payload.action === "update"
-              ? "edit tasks"
-              : "create tasks";
+    socket.on(
+      "permissionDenied",
+      (payload: { action: string; role: User["role"] }) => {
+        const actionLabel =
+          payload.action === "delete"
+            ? "delete tasks"
+            : payload.action === "move"
+              ? "move tasks"
+              : payload.action === "update"
+                ? "edit tasks"
+                : "create tasks";
 
-      addNotification({
-        title: "Permission denied",
-        message: `${USER_ROLE_LABELS[payload.role]} users cannot ${actionLabel}.`,
-        variant: "warning",
-      });
-    });
+        addNotification({
+          title: "Permission denied",
+          message: `${USER_ROLE_LABELS[payload.role]} users cannot ${actionLabel}.`,
+          variant: "warning",
+        });
+      },
+    );
 
     return () => {
       socket.off("connect");
       socket.off("disconnect");
-      socket.off('initTasks');
+      socket.off("initTasks");
       socket.off("currentUser");
-      socket.off('taskAdded');
-      socket.off('taskUpdated');
-      socket.off('taskMoved');
-      socket.off('taskDeleted');
+      socket.off("taskAdded");
+      socket.off("taskUpdated");
+      socket.off("taskMoved");
+      socket.off("taskDeleted");
       socket.off("permissionDenied");
       socket.disconnect();
     };
-  }, [setTasks, addTask, updateTask, moveTask, deleteTask, addNotification, setCurrentUser]);
+  }, [
+    setTasks,
+    addTask,
+    updateTask,
+    moveTask,
+    deleteTask,
+    addNotification,
+    setCurrentUser,
+  ]);
 }

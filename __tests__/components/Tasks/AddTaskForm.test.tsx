@@ -9,11 +9,11 @@ describe("AddTaskForm", () => {
 
     render(<AddTaskForm onAdd={onAdd} />);
 
-    await user.type(screen.getByPlaceholderText("Enter a new task…"), "  Review PRs  ");
-    await user.click(screen.getByRole("button", { name: "+ Add Task" }));
+    await user.type(screen.getByRole("textbox", { name: "Task title" }), "  Review PRs  ");
+    await user.click(screen.getByRole("button", { name: "Add Task" }));
 
     expect(onAdd).toHaveBeenCalledWith("Review PRs");
-    expect(screen.getByPlaceholderText("Enter a new task…")).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Task title" })).toHaveValue("");
   });
 
   it("does not submit blank values", async () => {
@@ -22,9 +22,9 @@ describe("AddTaskForm", () => {
 
     render(<AddTaskForm onAdd={onAdd} />);
 
-    await user.type(screen.getByPlaceholderText("Enter a new task…"), "   ");
+    await user.type(screen.getByRole("textbox", { name: "Task title" }), "   ");
 
-    const button = screen.getByRole("button", { name: "+ Add Task" });
+    const button = screen.getByRole("button", { name: "Add Task" });
     expect(button).toBeDisabled();
 
     await user.click(button);

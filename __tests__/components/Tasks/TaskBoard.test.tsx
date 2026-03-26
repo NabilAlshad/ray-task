@@ -34,7 +34,10 @@ jest.mock("@dnd-kit/core", () => ({
   closestCenter: jest.fn(),
   KeyboardSensor: jest.fn(),
   PointerSensor: jest.fn(),
-  useSensor: jest.fn((sensor: unknown, options: unknown) => ({ sensor, options })),
+  useSensor: jest.fn((sensor: unknown, options: unknown) => ({
+    sensor,
+    options,
+  })),
   useSensors: jest.fn((...sensors: unknown[]) => sensors),
   useDroppable: () => mockUseDroppable(),
 }));
@@ -56,15 +59,15 @@ jest.mock("@dnd-kit/utilities", () => ({
   },
 }));
 
-jest.mock("@/lib/hooks/useTaskSocket", () => ({
+jest.mock("@/lib/hooks/tasks/useTaskSocket", () => ({
   useTaskSocket: () => mockUseTaskSocket(),
 }));
 
-jest.mock("@/lib/hooks/useTaskModalLogic", () => ({
+jest.mock("@/lib/hooks/tasks/useTaskModalLogic", () => ({
   useTaskModalLogic: () => mockUseTaskModalLogic(),
 }));
 
-jest.mock("@/lib/hooks/useTaskDragLogic", () => ({
+jest.mock("@/lib/hooks/tasks/useTaskDragLogic", () => ({
   useTaskDragLogic: () => mockUseTaskDragLogic(),
 }));
 
@@ -143,7 +146,9 @@ describe("TaskBoard", () => {
 
     render(<TaskBoard />);
 
-    expect(screen.getByRole("heading", { name: "Project Board" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Project Board" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "To Do" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Done" })).toBeInTheDocument();
 
@@ -160,8 +165,12 @@ describe("TaskBoard", () => {
 
     render(<TaskBoard />);
 
-    expect(screen.queryByRole("button", { name: "Yes, delete" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Project Board" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Yes, delete" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Project Board" }),
+    ).toBeInTheDocument();
   });
 
   it("disables task creation for viewers", () => {
@@ -200,7 +209,9 @@ describe("TaskBoard", () => {
 
     render(<TaskBoard />);
 
-    expect(screen.getByRole("heading", { name: "Task Details" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Task Details" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("Document the board")).toHaveLength(2);
   });
 });

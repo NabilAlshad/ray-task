@@ -5,13 +5,21 @@ jest.mock("next/font/google", () => ({
   Geist_Mono: () => ({ variable: "mock-geist-mono" }),
 }));
 
+jest.mock("@/lib/utils/lazy", () => ({
+  LazyLoadingSpinner: () => <div>Loading Spinner</div>,
+}));
+
 describe("app/layout", () => {
   it("exports metadata and wraps children in the root html structure", async () => {
     const layoutModule = await import("@/app/layout");
     const RootLayout = layoutModule.default;
     const layout = RootLayout({
       children: <div>Child content</div>,
-    }) as ReactElement<{ lang: string; className: string; children: ReactElement }>;
+    }) as ReactElement<{
+      lang: string;
+      className: string;
+      children: ReactElement;
+    }>;
 
     expect(layoutModule.metadata.title).toBe("Create Next App");
     expect(layout.props.lang).toBe("en");
@@ -20,10 +28,17 @@ describe("app/layout", () => {
 
     const body = layout.props.children as ReactElement<{
       className: string;
-      children: ReactElement<{ children: ReactElement }>;
+      children: ReactElement;
     }>;
-    const clientWrapper = body.props.children as ReactElement<{ children: ReactElement }>;
-    const child = clientWrapper.props.children as ReactElement<{ children: string }>;
+    const suspense = body.props.children as ReactElement<{
+      children: ReactElement;
+    }>;
+    const clientWrapper = suspense.props.children as ReactElement<{
+      children: ReactElement;
+    }>;
+    const child = clientWrapper.props.children as ReactElement<{
+      children: string;
+    }>;
 
     expect(body.props.className).toContain("min-h-full");
     expect(child.props.children).toBe("Child content");

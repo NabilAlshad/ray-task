@@ -1,11 +1,11 @@
 import { type FormEvent } from "react";
 import { Button } from "@/components/ui/atomic/Button";
 import { Input } from "@/components/ui/atomic/Input";
-import { Modal } from "@/components/ui/compound/Modal";
+import { Modal } from "@/components/ui/template/Modal";
 import { USER_ROLE_LABELS, USER_ROLES, type UserRole } from "@/types";
-import { COLOR_OPTIONS, type UserColorOption } from "./constants";
+import { COLOR_OPTIONS, type UserColorOption } from "@/data/constants";
 
-type CreateUserModalProps = {
+export type CreateUserModalProps = {
   isOpen: boolean;
   onClose: () => void;
   draftName: string;
@@ -36,13 +36,17 @@ export function CreateUserModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Create User">
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <div>
-          <label htmlFor={nameInputId} className="mb-1 block text-sm font-medium text-gray-700">
+          <label
+            htmlFor={nameInputId}
+            className="mb-1 block text-sm font-medium text-gray-700"
+          >
             Name
           </label>
           <Input
             id={nameInputId}
             value={draftName}
             onChange={(event) => onDraftNameChange(event.target.value)}
+            aria-label="Name"
             placeholder="Enter a display name"
             autoFocus
             maxLength={24}
@@ -51,13 +55,19 @@ export function CreateUserModal({
         </div>
 
         <div>
-          <label htmlFor={roleSelectId} className="mb-1 block text-sm font-medium text-gray-700">
+          <label
+            htmlFor={roleSelectId}
+            className="mb-1 block text-sm font-medium text-gray-700"
+          >
             Role
           </label>
           <select
             id={roleSelectId}
             value={draftRole}
-            onChange={(event) => onDraftRoleChange(event.target.value as UserRole)}
+            onChange={(event) =>
+              onDraftRoleChange(event.target.value as UserRole)
+            }
+            aria-label="Role"
             className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {USER_ROLES.map((role) => (
@@ -70,12 +80,18 @@ export function CreateUserModal({
 
         <div>
           <p className="mb-2 text-sm font-medium text-gray-700">Color</p>
-          <div className="flex flex-wrap gap-2">
+          <div
+            className="flex flex-wrap gap-2"
+            role="radiogroup"
+            aria-label="Avatar color"
+          >
             {COLOR_OPTIONS.map((color) => (
               <button
                 key={color}
                 type="button"
                 onClick={() => onDraftColorChange(color)}
+                role="radio"
+                aria-checked={draftColor === color}
                 className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-105 ${color} ${
                   draftColor === color ? "border-gray-900" : "border-white"
                 }`}
@@ -87,10 +103,19 @@ export function CreateUserModal({
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            aria-label="Cancel"
+          >
             Cancel
           </Button>
-          <Button type="submit" disabled={!draftName.trim()}>
+          <Button
+            type="submit"
+            disabled={!draftName.trim()}
+            aria-label="Save User"
+          >
             Save User
           </Button>
         </div>

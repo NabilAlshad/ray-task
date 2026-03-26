@@ -19,7 +19,7 @@ jest.mock("@dnd-kit/sortable", () => ({
   verticalListSortingStrategy: {},
 }));
 
-jest.mock("@/components/Tasks/TaskCard", () => ({
+jest.mock("@/components/ui/compound/TaskCard", () => ({
   TaskCard: ({ task }: { task: { title: string } }) => <div>{task.title}</div>,
 }));
 

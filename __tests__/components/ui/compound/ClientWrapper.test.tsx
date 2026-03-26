@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { ClientWrapper } from "@/components/ui/compound/ClientWrapper";
+import { ClientWrapper } from "@/lib/utils/ClientWrapper";
 
 describe("ClientWrapper", () => {
   it("renders its children on the client", () => {

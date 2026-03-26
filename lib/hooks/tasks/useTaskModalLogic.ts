@@ -18,9 +18,33 @@ type UseTaskModalLogicOptions = {
   addOptimisticTask: (action: TaskOptimisticAction) => void;
 };
 
-export function useTaskModalLogic({ tasks, addOptimisticTask }: UseTaskModalLogicOptions) {
+function generateUniqueTaskId(existingIds: Set<string>) {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    let id = crypto.randomUUID();
+    while (existingIds.has(id)) {
+      id = crypto.randomUUID();
+    }
+    return id;
+  }
+
+  let id = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}`;
+  while (existingIds.has(id)) {
+    id = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}`;
+  }
+  return id;
+}
+
+export function useTaskModalLogic({
+  tasks,
+  addOptimisticTask,
+}: UseTaskModalLogicOptions) {
   const { addTask, updateTask, deleteTask } = useTaskStore();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification,
+  );
   const currentUser = useCurrentUserStore((state) => state.currentUser);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,81 +88,99 @@ export function useTaskModalLogic({ tasks, addOptimisticTask }: UseTaskModalLogi
     setTaskToViewId(null);
   }, []);
 
-  const handleOpenEditModal = useCallback((task: Task) => {
-    if (!canUpdateTask(role)) {
-      addNotification({
-        title: "Read-only access",
-        message: "Your current role does not allow editing tasks.",
-        variant: "warning",
-      });
-      return;
-    }
-    setTaskToViewId(null);
-    setTaskToEditId(task.id);
-    setIsModalOpen(true);
-  }, [addNotification, role]);
-
-  const handleSubmitModal = useCallback((data: TaskDraft) => {
-    if (taskToEdit) {
+  const handleOpenEditModal = useCallback(
+    (task: Task) => {
       if (!canUpdateTask(role)) {
         addNotification({
-          title: "Update blocked",
+          title: "Read-only access",
           message: "Your current role does not allow editing tasks.",
           variant: "warning",
         });
         return;
       }
-      const updated = { ...taskToEdit, ...data };
-      startTransition(() => {
-        addOptimisticTask({ type: "update", task: updated });
-        updateTask(updated.id, updated);
-        socket.emit("taskUpdated", updated);
-      });
-      addNotification({
-        title: "Task updated",
-        message: `"${updated.title}" was updated.`,
-        variant: "info",
-      });
-    } else {
-      if (!canCreateTask(role)) {
+      setTaskToViewId(null);
+      setTaskToEditId(task.id);
+      setIsModalOpen(true);
+    },
+    [addNotification, role],
+  );
+
+  const handleSubmitModal = useCallback(
+    (data: TaskDraft) => {
+      if (taskToEdit) {
+        if (!canUpdateTask(role)) {
+          addNotification({
+            title: "Update blocked",
+            message: "Your current rsole does not allow editing tasks.",
+            variant: "warning",
+          });
+          return;
+        }
+        const updated = { ...taskToEdit, ...data };
+        startTransition(() => {
+          addOptimisticTask({ type: "update", task: updated });
+          updateTask(updated.id, updated);
+          socket.emit("taskUpdated", updated);
+        });
         addNotification({
-          title: "Create blocked",
-          message: "Your current role does not allow creating tasks.",
+          title: "Task updated",
+          message: `"${updated.title}" was updated.`,
+          variant: "info",
+        });
+      } else {
+        if (!canCreateTask(role)) {
+          addNotification({
+            title: "Create blocked",
+            message: "Your current role does not allow creating tasks.",
+            variant: "warning",
+          });
+          return;
+        }
+        const existingIds = new Set(tasks.map((task) => task.id));
+        const newTask: Task = {
+          id: generateUniqueTaskId(existingIds),
+          title: data.title,
+          description: data.description,
+          status: data.status,
+          order: tasks.filter((task) => task.status === data.status).length,
+        };
+        startTransition(() => {
+          addOptimisticTask({ type: "add", task: newTask });
+          addTask(newTask);
+          socket.emit("taskAdded", newTask);
+        });
+        addNotification({
+          title: "Task created",
+          message: `"${newTask.title}" was added to ${TASK_STATUS_LABELS[newTask.status]}.`,
+          variant: "success",
+        });
+      }
+    },
+    [
+      taskToEdit,
+      updateTask,
+      addTask,
+      tasks,
+      addNotification,
+      role,
+      addOptimisticTask,
+    ],
+  );
+
+  const handleRequestDeleteTask = useCallback(
+    (task: Task) => {
+      if (!canDeleteTask(role)) {
+        addNotification({
+          title: "Delete blocked",
+          message: "Only admins can delete tasks in this board.",
           variant: "warning",
         });
         return;
       }
-      const newTask: Task = {
-        id: Math.random().toString(36).substring(2, 9),
-        title: data.title,
-        description: data.description,
-        status: data.status,
-        order: tasks.filter((task) => task.status === data.status).length,
-      };
-      startTransition(() => {
-        addOptimisticTask({ type: "add", task: newTask });
-        addTask(newTask);
-        socket.emit("taskAdded", newTask);
-      });
-      addNotification({
-        title: "Task created",
-        message: `"${newTask.title}" was added to ${TASK_STATUS_LABELS[newTask.status]}.`,
-        variant: "success",
-      });
-    }
-  }, [taskToEdit, updateTask, addTask, tasks, addNotification, role, addOptimisticTask]);
-
-  const handleRequestDeleteTask = useCallback((task: Task) => {
-    if (!canDeleteTask(role)) {
-      addNotification({
-        title: "Delete blocked",
-        message: "Only admins can delete tasks in this board.",
-        variant: "warning",
-      });
-      return;
-    }
-    setTaskToDeleteId(task.id);
-  }, [addNotification, role]);
+      setTaskToDeleteId(task.id);
+    },
+    [addNotification, role],
+  );
 
   const handleCloseDeleteModal = useCallback(() => {
     setTaskToDeleteId(null);
@@ -167,7 +209,9 @@ export function useTaskModalLogic({ tasks, addOptimisticTask }: UseTaskModalLogi
       variant: "danger",
     });
     setTaskToDeleteId(null);
-    setTaskToViewId((currentId) => (currentId === taskToDelete.id ? null : currentId));
+    setTaskToViewId((currentId) =>
+      currentId === taskToDelete.id ? null : currentId,
+    );
   }, [taskToDelete, deleteTask, addNotification, role, addOptimisticTask]);
 
   return {

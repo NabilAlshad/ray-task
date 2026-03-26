@@ -1,6 +1,6 @@
 "use client";
 
-import { LiveUsers } from "@/components/ui/compound/LiveUsers";
+import { LiveUsers } from "@/components/live-users/LiveUsers";
 import { TaskBoard } from "@/components/Tasks/TaskBoard";
 
 export default function Home() {

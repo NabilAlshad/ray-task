@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Modal } from "@/components/ui/compound/Modal";
+import { Modal } from "@/components/ui/template/Modal";
 
 describe("Modal", () => {
   it("renders only when open and closes from the close button", async () => {
@@ -20,8 +20,12 @@ describe("Modal", () => {
       </Modal>,
     );
 
-    expect(screen.getByRole("heading", { name: "Task details" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Close Task details" }));
+    expect(
+      screen.getByRole("heading", { name: "Task details" }),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Close Task details" }),
+    );
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -33,7 +37,9 @@ describe("Modal", () => {
       </Modal>,
     );
 
-    expect(screen.queryByRole("heading", { name: "Closed modal" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Closed modal" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Should not exist")).not.toBeInTheDocument();
   });
 });

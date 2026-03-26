@@ -1,16 +1,12 @@
 import { Trash2 } from "lucide-react";
-import { Modal } from "@/components/ui/compound/Modal";
-import {
-  USER_ROLE_LABELS,
-  type User,
-  type UserDirectoryEntry,
-} from "@/types";
-import { ROLE_STYLES } from "./constants";
+import { Modal } from "@/components/ui/template/Modal";
+import { USER_ROLE_LABELS, type User, type UserDirectoryEntry } from "@/types";
+import { ROLE_STYLES } from "@/data/constants";
 
-type SwitchUserModalProps = {
+export type SwitchUserModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  currentUser: User | null;
+  currentUser: User | null | undefined;
   directoryUsers: UserDirectoryEntry[];
   canManageSavedUsers: boolean;
   onSelectPresetUser: (user: UserDirectoryEntry) => void;
@@ -32,12 +28,13 @@ export function SwitchUserModal({
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
           <div className="mb-3">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Choose an existing user</h3>
-              <p className="text-sm text-gray-500">Preset users are loaded from `data/users.json`.</p>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Choose an existing user
+              </h3>
             </div>
           </div>
 
-          <div className="max-h-[min(55vh,22rem)] space-y-2 overflow-y-auto pr-1">
+          <div className="max-h-[min(55vh,22rem)]  space-y-2 overflow-y-auto pr-1">
             {directoryUsers.map((presetUser) => {
               const isCurrentSelection =
                 currentUser?.name === presetUser.name &&
@@ -47,7 +44,7 @@ export function SwitchUserModal({
               return (
                 <div
                   key={presetUser.id}
-                  className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm"
+                  className="flex cursor-pointer  items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm  hover:bg-gray-50 transition-colors"
                 >
                   <button
                     type="button"
@@ -56,13 +53,13 @@ export function SwitchUserModal({
                     aria-label={`Select saved user ${presetUser.name}`}
                   >
                     <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold uppercase text-white ${presetUser.color}`}
+                      className={`flex h-10 w-10 cursor-pointer shrink-0 items-center justify-center rounded-full text-sm font-bold uppercase text-white ${presetUser.color}`}
                     >
                       {presetUser.name.charAt(0)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-semibold text-gray-900">
+                        <p className="truncate cursor-pointer text-sm font-semibold text-gray-900">
                           {presetUser.name}
                         </p>
                         {isCurrentSelection ? (
