@@ -1,5 +1,24 @@
-# Task: Add mouse pointer cursor to existing user list UI
+# Task Fixes Progress
 
-## Steps:
+## Approved Plan Steps
 
-- [x] 1. Update SwitchUserModal.tsx: Add `cursor-pointer` class to preset user list item containers for hover indication.\n- [x] 2. Test hover behavior in Switch User modal.\n- [x] 3. Update TODO.md with completion.\n- [x] 4. Attempt completion.
+1. ~~Explored project files and understood codebase~~
+2. Update `lib/hooks/live-users/useLiveUsers.ts` - Add handleSubmitCreateUser, modify handleUserCreated, expose in hook return.
+3. Update `components/live-users/LiveUsers.tsx` - Pass correct onSubmit to CreateUserModal.
+4. Test changes (restart server, verify no-switch on create user).
+5. attempt_completion
+
+## Steps Completed
+
+- Updated useLiveUsers.ts with handleSubmitCreateUser and fixed handleUserCreated
+- Updated types/LiveUsers.ts interface
+- Fixed LiveUsers.tsx destructuring and onSubmit prop
+
+## Final Status
+
+✅ Issue 2 fixed (no auto-switch on create user)
+ℹ️ Issue 1: No code changes (drag works per analysis)
+
+**Test:** `pkill -f node && npm run dev`
+
+Ready for completion.

@@ -1,7 +1,26 @@
 import type { Task, TaskMovePayload, TaskOptimisticAction } from "@/types";
 
+const normalizeOrder = (tasks: Task[]) =>
+  [...tasks]
+    .sort((a, b) => a.order - b.order)
+    .map((task, index) => ({ ...task, order: index }));
+
 export function addTaskToList(tasks: Task[], task: Task) {
-  return [...tasks, task];
+  if (tasks.some((item) => item.id === task.id)) {
+    return tasks;
+  }
+
+  const updatedTasks = [...tasks, task];
+  const sameStatusTasks = updatedTasks.filter(
+    (item) => item.status === task.status,
+  );
+
+  const normalizedSameStatus = normalizeOrder(sameStatusTasks);
+
+  return [
+    ...updatedTasks.filter((item) => item.status !== task.status),
+    ...normalizedSameStatus,
+  ];
 }
 
 export function updateTaskInList(
@@ -13,7 +32,17 @@ export function updateTaskInList(
 }
 
 export function deleteTaskFromList(tasks: Task[], id: Task["id"]) {
-  return tasks.filter((task) => task.id !== id);
+  const remainingTasks = tasks.filter((task) => task.id !== id);
+
+  const normalizedTasks = Array.from(
+    new Set(remainingTasks.map((t) => t.status)),
+  ).flatMap((status) => {
+    return normalizeOrder(
+      remainingTasks.filter((task) => task.status === status),
+    );
+  });
+
+  return normalizedTasks;
 }
 
 export function moveTaskInList(
@@ -22,31 +51,55 @@ export function moveTaskInList(
   newStatus: TaskMovePayload["status"],
   newOrder: TaskMovePayload["order"],
 ) {
-  const taskIndex = tasks.findIndex((task) => task.id === id);
-  if (taskIndex === -1) {
+  const task = tasks.find((item) => item.id === id);
+  if (!task) {
     return tasks;
   }
 
-  const updatedTasks = [...tasks];
-  const [task] = updatedTasks.splice(taskIndex, 1);
+  const sourceStatus = task.status;
   const movedTask = { ...task, status: newStatus };
+  const remainingTasks = tasks.filter((item) => item.id !== id);
 
-  const columnTasks = updatedTasks
-    .filter((item) => item.status === newStatus)
-    .sort((a, b) => a.order - b.order);
+  const sourceTasks = normalizeOrder(
+    remainingTasks.filter((item) => item.status === sourceStatus),
+  );
+  const destinationTasks = normalizeOrder(
+    remainingTasks.filter((item) => item.status === newStatus),
+  );
 
-  columnTasks.splice(newOrder, 0, movedTask);
-  columnTasks.forEach((item, index) => {
-    item.order = index;
-  });
+  if (sourceStatus === newStatus) {
+    const updatedTasks = [...sourceTasks];
+    updatedTasks.splice(newOrder, 0, { ...movedTask, order: newOrder });
+    const orderedTasks = updatedTasks.map((task, index) => ({
+      ...task,
+      order: index,
+    }));
+    return [
+      ...remainingTasks.filter((item) => item.status !== sourceStatus),
+      ...orderedTasks,
+    ];
+  }
+
+  const updatedDestination = [...destinationTasks];
+  updatedDestination.splice(newOrder, 0, { ...movedTask, order: newOrder });
+  const orderedDestination = updatedDestination.map((task, index) => ({
+    ...task,
+    order: index,
+  }));
 
   return [
-    ...updatedTasks.filter((item) => item.status !== newStatus),
-    ...columnTasks,
+    ...remainingTasks.filter(
+      (item) => item.status !== sourceStatus && item.status !== newStatus,
+    ),
+    ...sourceTasks,
+    ...orderedDestination,
   ];
 }
 
-export function applyTaskOptimisticAction(tasks: Task[], action: TaskOptimisticAction) {
+export function applyTaskOptimisticAction(
+  tasks: Task[],
+  action: TaskOptimisticAction,
+) {
   switch (action.type) {
     case "add":
       return addTaskToList(tasks, action.task);

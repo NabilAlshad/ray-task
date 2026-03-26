@@ -90,6 +90,10 @@ export function useTaskSocket() {
     });
 
     socket.on("taskAdded", (newTask: Task) => {
+      // Prevent duplicates when the same task may be added optimistically locally.
+      if (tasksRef.current.some((task) => task.id === newTask.id)) {
+        return;
+      }
       addTask(newTask);
       addNotification({
         title: "New task added",

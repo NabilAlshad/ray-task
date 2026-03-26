@@ -106,7 +106,7 @@ export function TaskBoard() {
             disabled={!canCreate}
             aria-label="New Task"
             aria-haspopup="dialog"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
+            className="flex items-center cursor-pointer gap-2 bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
             title={
               canCreate
                 ? "Create a new task"

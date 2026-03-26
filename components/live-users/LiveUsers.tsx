@@ -47,6 +47,7 @@ export function LiveUsers() {
     handleOpenCreateUser,
     handleOpenSwitchUser,
     handleSubmitSwitchUser,
+    handleSubmitCreateUser,
     handleSelectPresetUser,
     handleDeletePresetUser,
   } = useLiveUsers();
@@ -57,39 +58,6 @@ export function LiveUsers() {
         <div className="mr-auto flex items-center gap-2 text-sm font-medium text-gray-500">
           <Users className="h-4 w-4" />
           <span>{LIVE_COLLABORATION_TITLE}</span>
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          {activeUsers
-            .filter((user) => user.id !== currentUser?.id)
-            .map((user) => (
-              <div
-                key={user.id}
-                title={`${user.name} • ${user.role}`}
-                className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1.5 cursor-pointer"
-              >
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold uppercase text-white shadow-sm ${user.color}`}
-                >
-                  {user.name.charAt(0)}
-                </div>
-                <div className="hidden sm:block">
-                  <div className="text-sm font-semibold leading-none text-gray-800">
-                    {user.name}
-                  </div>
-                  <div className="mt-1">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ROLE_STYLES[user.role]}`}
-                    >
-                      {USER_ROLE_LABELS[user.role]}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          {!activeUsers.length ? (
-            <div className="text-sm text-gray-400">{CONNECTING_LABEL}</div>
-          ) : null}
         </div>
 
         <div className="flex items-center justify-between gap-3 sm:justify-end lg:ml-4 lg:pl-6 lg:border-l lg:border-gray-200">
@@ -173,7 +141,7 @@ export function LiveUsers() {
           onDraftNameChange={setDraftName}
           onDraftColorChange={setDraftColor}
           onDraftRoleChange={setDraftRole}
-          onSubmit={handleSubmitSwitchUser}
+          onSubmit={handleSubmitCreateUser}
         />
       </Suspense>
     </div>

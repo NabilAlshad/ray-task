@@ -6,6 +6,12 @@
     "role": "ADMIN"
   },
   {
+    "id": "8e309fa9-048e-4830-b178-2ba869777285",
+    "name": "all",
+    "color": "bg-green-500",
+    "role": "VIEWER"
+  },
+  {
     "id": "user-bob-22",
     "name": "Bob 22",
     "color": "bg-blue-500",
@@ -22,6 +28,12 @@
     "name": "Diana 8",
     "color": "bg-yellow-500",
     "role": "ADMIN"
+  },
+  {
+    "id": "5c40932c-04a3-4d87-bb89-369af3d1b6ef",
+    "name": "doe",
+    "color": "bg-green-500",
+    "role": "VIEWER"
   },
   {
     "id": "user-eve-99",
@@ -54,10 +66,22 @@
     "role": "VIEWER"
   },
   {
+    "id": "a11deca9-273a-4075-be69-71df60b390aa",
+    "name": "john",
+    "color": "bg-green-500",
+    "role": "ADMIN"
+  },
+  {
     "id": "user-judy-54",
     "name": "Judy 54",
     "color": "bg-cyan-500",
     "role": "MEMBER"
+  },
+  {
+    "id": "5b8e107b-c9d0-4197-b816-b6b6d44ec06d",
+    "name": "pal",
+    "color": "bg-green-500",
+    "role": "VIEWER"
   },
   {
     "id": "271f7f68-be57-448b-8f32-c87e98b8bee4",

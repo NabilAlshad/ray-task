@@ -142,13 +142,6 @@ export function useLiveUsers(): LiveUsersHookResult {
         variant: "success",
       });
 
-      broadcastUser({
-        id: getSocketUserId(currentUserRef.current.id),
-        name: createdUser.name,
-        color: createdUser.color,
-        role: createdUser.role,
-      });
-
       setIsCreateUserOpen(false);
       setIsSwitchUserOpen(false);
     };
@@ -224,6 +217,18 @@ export function useLiveUsers(): LiveUsersHookResult {
     setIsCreateUserOpen(true);
   };
 
+  const handleSubmitCreateUser = useCallback(
+    (event: FormEvent) => {
+      event.preventDefault();
+      socket.emit("createUser", {
+        name: draftName.trim() || FALLBACK_CREATED_USER_NAME,
+        color: draftColor,
+        role: draftRole,
+      });
+    },
+    [draftName, draftColor, draftRole],
+  );
+
   const handleSubmitSwitchUser = (event: FormEvent) => {
     event.preventDefault();
 
@@ -280,6 +285,7 @@ export function useLiveUsers(): LiveUsersHookResult {
     handleOpenSwitchUser,
     handleOpenCreateUser,
     handleSubmitSwitchUser,
+    handleSubmitCreateUser,
     handleSelectPresetUser,
     handleDeletePresetUser,
   };

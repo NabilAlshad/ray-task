@@ -24,6 +24,7 @@ export type LiveUsersHookResult = {
   handleOpenSwitchUser: () => void;
   handleOpenCreateUser: () => void;
   handleSubmitSwitchUser: (event: FormEvent) => void;
+  handleSubmitCreateUser: (event: FormEvent) => void;
   handleSelectPresetUser: (presetUser: UserDirectoryEntry) => void;
   handleDeletePresetUser: (userId: string) => void;
 };

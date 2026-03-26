@@ -1,7 +1,5 @@
 # Real-Time Kanban Task Board
 
-A small collaborative Kanban board built with Next.js, Socket.IO, Zustand, and dnd-kit. Multiple users can open the same board and see task changes update in real time.
-
 ## Installation
 
 ### Prerequisites
@@ -35,7 +33,9 @@ npm run build
 npm start
 ```
 
-## Architecture And Folder Structure
+A small collaborative Kanban board built with Next.js, Socket.IO, Zustand, and dnd-kit. Multiple users can open the same board and see task changes update in real time.
+
+## Architecture and Folder Structure
 
 This app uses a custom Node server instead of running plain `next dev` or `next start`. The same HTTP server handles both the Next.js app and the Socket.IO connection.
 
@@ -43,20 +43,31 @@ This app uses a custom Node server instead of running plain `next dev` or `next 
 .
 ├── app/                    # Next.js App Router entrypoints and global styles
 ├── components/             # Board UI, modals, notifications, live user UI
+│   ├── live-users/         # User management components
+│   └── Tasks/              # Task board components
 ├── lib/
 │   ├── hooks/              # Socket, drag/drop, and modal behavior
+│   │   ├── live-users/     # Live user hooks
+│   │   └── tasks/          # Task-related hooks
 │   ├── socket.ts           # Socket.IO client singleton
 │   └── utils/              # Shared helpers/constants
 ├── store/                  # Zustand stores for tasks, user, notifications
 ├── types/                  # Shared TypeScript types
 ├── data/                   # Local JSON persistence
-├── server.js               # Custom Node + Next + Socket.IO server
-└── __tests__/              # Component and app tests
+├── server/                 # Server-side logic
+│   ├── server.js           # Custom Node + Next + Socket.IO server
+│   ├── socketHandlers.js   # Socket event handlers
+│   ├── tasksStore.js       # Task persistence logic
+│   └── usersDirectoryStore.js # User directory management
+├── public/                 # Static assets
+├── test-utils/             # Test utilities
+├── __tests__/              # Component and app tests
+└── tsconfig.json, jest.config.ts, etc. # Config files
 ```
 
 Architecture summary:
 
-- `server.js` boots Next.js, attaches Socket.IO, keeps the current task list in memory, and writes changes to `data/tasks.json`.
+- `server/server.js` boots Next.js, attaches Socket.IO, keeps the current task list in memory, and writes changes to `data/tasks.json`.
 - `app/page.tsx` renders the main page with the live users bar and task board.
 - `components/Tasks/*` contains the board UI and task interactions.
 - `lib/hooks/*` keeps socket, drag/drop, and modal logic separate from presentational components.
@@ -104,16 +115,16 @@ Current event set:
 
 The server also enables Socket.IO connection state recovery, which helps restore missed events after brief disconnects.
 
-## Trade-Offs And Assumptions
+## Trade-Offs and Assumptions
 
-Trade-offs:
+### Trade-Offs
 
 - A JSON file is simple and easy to inspect, but it is not suitable for high write volume, concurrent multi-process writes, or production-scale collaboration.
 - Keeping board state in server memory makes updates fast, but it assumes a single server instance.
 - Optimistic client updates improve responsiveness, but simultaneous edits use a simple last-write-wins model.
 - A custom server makes real-time setup straightforward, but it is less portable than a purely serverless Next.js deployment.
 
-Assumptions:
+### Assumptions
 
 - There is currently one shared board room for all connected users.
 - The app is intended for local/demo or small-team usage rather than large-scale production traffic.
