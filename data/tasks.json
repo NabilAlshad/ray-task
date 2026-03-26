@@ -7,25 +7,11 @@
     "order": 0
   },
   {
-    "id": "bcef5c93-a648-445d-a225-4c5ae7db3cff",
-    "title": "Learn Python",
-    "description": "",
-    "status": "DONE",
-    "order": 0
-  },
-  {
-    "id": "58e209aa-7f3b-4c8d-a6ca-22f07e024652",
+    "id": "10060e6a-9124-4c77-a3ce-ad2f5f06adcf",
     "title": "LEAARN JS",
-    "description": "LEARN ",
-    "status": "DONE",
+    "description": "",
+    "status": "TODO",
     "order": 1
-  },
-  {
-    "id": "6",
-    "title": "Set up CI/CD pipeline",
-    "description": "Automate testing and ",
-    "status": "DONE",
-    "order": 3
   },
   {
     "id": "5",
@@ -37,15 +23,43 @@
   {
     "id": "2",
     "title": "Build the TaskCard component",
-    "description": "Implement drag and drop functionality",
+    "description": "Implement drag and drop ",
     "status": "IN_PROGRESS",
-    "order": 1
+    "order": 2
   },
   {
     "id": "3",
     "title": "Integrate API endpoints",
     "description": "Connect frontend to api",
     "status": "IN_PROGRESS",
+    "order": 3
+  },
+  {
+    "id": "bcef5c93-a648-445d-a225-4c5ae7db3cff",
+    "title": "Learn Python",
+    "description": "",
+    "status": "DONE",
+    "order": 0
+  },
+  {
+    "id": "385f8f76-6b95-456e-bdfa-fb2041c82b65",
+    "title": "LEAARN ",
+    "description": "",
+    "status": "DONE",
+    "order": 1
+  },
+  {
+    "id": "58e209aa-7f3b-4c8d-a6ca-22f07e024652",
+    "title": "LEAARN JS",
+    "description": "LEARN ",
+    "status": "DONE",
     "order": 2
+  },
+  {
+    "id": "6",
+    "title": "Set up CI/CD pipeline",
+    "description": "Automate testing and ",
+    "status": "DONE",
+    "order": 3
   }
 ]
